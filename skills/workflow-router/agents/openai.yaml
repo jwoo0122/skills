@@ -1,0 +1,3 @@
+interface:
+  display_name: "Internal Workflow Router"
+  short_description: "ADR-aware adaptive workflow routing"

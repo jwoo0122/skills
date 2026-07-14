@@ -1,0 +1,17 @@
+{
+  "name": "autonomous-coding-workflow-skills",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cross-harness Agent Skills for adaptive clarification, architectural memory, implementation, independent verification, and draft pull request delivery.",
+  "keywords": [
+    "agent-skills",
+    "pi-package",
+    "coding-agent"
+  ],
+  "license": "MIT",
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  }
+}

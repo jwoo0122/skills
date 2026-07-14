@@ -1,0 +1,92 @@
+version: 1
+generated_by: maintain-architecture-decisions
+decisions:
+  - id: architecture.living-decisions
+    status: accepted
+    scope: architecture
+    decision_type: knowledge-system
+    summary: Maintain ADRs as a semantic, revisable map of durable architectural intent.
+    applies_to:
+      - adr/**
+      - skills/maintain-architecture-decisions/**
+      - skills/workflow-router/**
+      - skills/clarify-and-plan/**
+      - skills/review-change/**
+    file: records/architecture/living-decisions.md
+    constrains:
+      - execution.adaptive-delegation
+    depends_on:
+      - interaction.material-ambiguity-loop
+    supersedes: []
+    superseded_by: []
+    last_reviewed: '2026-07-15'
+  - id: execution.adaptive-delegation
+    status: accepted
+    scope: execution
+    decision_type: workflow
+    summary: Scale implementer delegation and independent verification to execution
+      shape and risk.
+    applies_to:
+      - skills/execute-to-pr/**
+      - skills/review-change/**
+      - skills/coding-workflow-core/**
+    file: records/execution/adaptive-delegation.md
+    constrains: []
+    depends_on:
+      - architecture.living-decisions
+      - workflow.independent-facets
+    supersedes: []
+    superseded_by: []
+    last_reviewed: '2026-07-15'
+  - id: interaction.material-ambiguity-loop
+    status: accepted
+    scope: interaction
+    decision_type: interaction
+    summary: Iterate clarification until no unresolved ambiguity can materially change
+      the result.
+    applies_to:
+      - skills/clarify-and-plan/**
+      - skills/workflow-router/**
+    file: records/interaction/material-ambiguity-loop.md
+    constrains:
+      - architecture.living-decisions
+    depends_on:
+      - workflow.independent-facets
+    supersedes: []
+    superseded_by: []
+    last_reviewed: '2026-07-15'
+  - id: workflow.independent-facets
+    status: accepted
+    scope: workflow
+    decision_type: workflow
+    summary: Route clarification, architecture, execution, and verification as independent
+      facets.
+    applies_to:
+      - skills/workflow-router/**
+      - skills/coding-workflow-core/**
+    file: records/workflow/independent-facets.md
+    constrains:
+      - interaction.material-ambiguity-loop
+      - execution.adaptive-delegation
+    depends_on:
+      - workflow.public-entrypoint
+    supersedes: []
+    superseded_by: []
+    last_reviewed: '2026-07-15'
+  - id: workflow.public-entrypoint
+    status: accepted
+    scope: workflow
+    decision_type: interface
+    summary: clarify-and-plan is the sole user-facing entry point for the workflow
+      skill set.
+    applies_to:
+      - skills/clarify-and-plan/**
+      - skills/*/agents/openai.yaml
+    file: records/workflow/public-entrypoint.md
+    constrains:
+      - workflow.independent-facets
+      - interaction.material-ambiguity-loop
+    depends_on: []
+    supersedes: []
+    superseded_by: []
+    last_reviewed: '2026-07-15'

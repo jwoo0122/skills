@@ -1,0 +1,3 @@
+interface:
+  display_name: "Internal Diagnose Bug"
+  short_description: "Evidence-driven diagnosis and red-test handoff"

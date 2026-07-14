@@ -223,6 +223,24 @@ def check_pi_manifest() -> None:
     assert re.fullmatch(r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?", package["version"])
 
 
+def check_release_automation() -> None:
+    package = json.loads((ROOT / "package.json").read_text())
+    manifest = json.loads((ROOT / ".release-please-manifest.json").read_text())
+    config = json.loads((ROOT / "release-please-config.json").read_text())
+    workflow = (ROOT / ".github" / "workflows" / "release-please.yml").read_text()
+    changelog = (ROOT / "CHANGELOG.md").read_text()
+
+    assert manifest == {".": package["version"]}
+    assert config["release-type"] == "node"
+    assert re.fullmatch(r"[0-9a-f]{40}", config["bootstrap-sha"])
+    assert "." in config["packages"]
+    assert "branches:\n      - main" in workflow
+    assert "googleapis/release-please-action@" in workflow
+    assert "contents: write" in workflow
+    assert "pull-requests: write" in workflow
+    assert f"## {package['version']}" in changelog
+
+
 def main() -> None:
     check_skills()
     check_policy_scope()
@@ -232,6 +250,7 @@ def main() -> None:
     check_required_resources()
     check_install_documentation()
     check_pi_manifest()
+    check_release_automation()
     print("package structure: ok")
 
 

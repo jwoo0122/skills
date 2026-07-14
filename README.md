@@ -141,6 +141,16 @@ Run the package checks:
 
 They validate skill metadata and visibility intent, required resources, the forward-test catalog schema, ADR structure and index consistency, removal of obsolete installation paths, and standard installation documentation. They do not execute an LLM or prove behavioral compliance. The scenario catalog is intended for independent forward tests across models, where success is judged by preserved intent and safety rather than identical wording, question counts, or agent counts.
 
+## Releases
+
+The current release is `1.0.0`. Future versions are managed by Release Please from Conventional Commit messages on `main`:
+
+- `fix:` proposes a patch release.
+- `feat:` proposes a minor release.
+- `feat!:` or a `BREAKING CHANGE:` footer proposes a major release.
+
+Release Please maintains a release pull request containing the version and changelog update. Merging that pull request creates the corresponding Git tag and GitHub Release. Commits that do not describe a user-visible release, such as `docs:`, `test:`, or `chore:`, do not force a version bump by themselves.
+
 ## Limits
 
 This package is a soft instruction layer, not a runtime security boundary. Harnesses may expose internal skills, deny tools or credentials, or choose not to activate an implicit dependency. Git and remote delivery also depend on the repository, worktree, authentication, and active instructions. When the workflow cannot safely continue, it reports the last completed phase and exact blocker rather than claiming completion.

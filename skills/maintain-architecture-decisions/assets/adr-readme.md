@@ -9,6 +9,6 @@ This directory is a living map of architectural intent, not a chronological deci
 - Create a record only for a new architectural question.
 - Treat accepted decisions as current but revisable intent.
 - Keep supersession links bidirectional.
-- Rebuild and validate the index with the ADR maintainer script after edits.
+- Rebuild and validate the index with `skills/maintain-architecture-decisions/scripts/adr` after edits. The launcher selects a Python interpreter that can import PyYAML and does not install packages.
 
 Records capture intent that code alone does not reliably reveal. Local implementation details and routine changes do not belong here.

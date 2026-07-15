@@ -164,7 +164,10 @@ def check_scenarios() -> None:
 
 
 def check_scripts() -> None:
-    for relative in ("scripts/check.sh",):
+    for relative in (
+        "scripts/check.sh",
+        "skills/maintain-architecture-decisions/scripts/adr",
+    ):
         path = ROOT / relative
         assert path.is_file()
         assert path.stat().st_mode & stat.S_IXUSR, f"not executable: {relative}"

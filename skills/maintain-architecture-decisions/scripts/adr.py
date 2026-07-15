@@ -17,7 +17,7 @@ try:
     import yaml
 except ImportError:
     print(
-        "adr error: PyYAML is required; install it with `python3 -m pip install PyYAML`.",
+        "adr error: PyYAML is required for this interpreter; use the sibling `scripts/adr` launcher to find a compatible one.",
         file=sys.stderr,
     )
     raise SystemExit(2)

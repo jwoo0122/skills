@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 import importlib.util
 import os
+import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Optional
 from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills" / "maintain-architecture-decisions" / "scripts" / "adr.py"
+LAUNCHER = ROOT / "skills" / "maintain-architecture-decisions" / "scripts" / "adr"
 DOGFOOD = ROOT / "adr"
 
 
@@ -39,6 +42,122 @@ class AdrToolTests(unittest.TestCase):
 
     def copy_dogfood(self, destination: Path) -> None:
         shutil.copytree(DOGFOOD, destination / "adr")
+
+    def run_launcher(
+        self,
+        *arguments: str,
+        python: Optional[str] = None,
+    ) -> subprocess.CompletedProcess[str]:
+        environment = os.environ.copy()
+        if python is not None:
+            environment["ADR_PYTHON"] = python
+        return subprocess.run(
+            [str(LAUNCHER), *arguments],
+            text=True,
+            capture_output=True,
+            env=environment,
+            check=False,
+        )
+
+    def test_launcher_selects_explicit_python(self) -> None:
+        result = self.run_launcher("--print-python", python=sys.executable)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(
+            Path(sys.executable).resolve(),
+            Path(result.stdout.strip()).resolve(),
+        )
+
+    def test_launcher_runs_adr_with_selected_python(self) -> None:
+        result = self.run_launcher(
+            "validate",
+            "--root",
+            str(ROOT),
+            python=sys.executable,
+        )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("validate: ok (5 records)", result.stdout)
+        self.assertIn("PyYAML", result.stderr)
+
+    def test_launcher_rejects_explicit_python_without_pyyaml(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            fake_python = Path(directory) / "python"
+            fake_python.write_text("#!/bin/sh\nexit 7\n", encoding="utf-8")
+            fake_python.chmod(0o755)
+
+            result = self.run_launcher("--print-python", python=str(fake_python))
+
+        self.assertEqual(2, result.returncode)
+        self.assertIn("cannot import PyYAML", result.stderr)
+        self.assertIn("ADR_PYTHON", result.stderr)
+
+    def test_launcher_skips_unusable_path_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            directory_path = Path(directory)
+            unusable_python = directory_path / "python3"
+            unusable_python.write_text("#!/bin/sh\nexit 7\n", encoding="utf-8")
+            unusable_python.chmod(0o755)
+
+            usable_python = directory_path / "python"
+            usable_python.write_text(
+                f"#!/bin/sh\nexec {shlex.quote(sys.executable)} \"$@\"\n",
+                encoding="utf-8",
+            )
+            usable_python.chmod(0o755)
+
+            environment = os.environ.copy()
+            environment.pop("ADR_PYTHON", None)
+            environment.pop("VIRTUAL_ENV", None)
+            environment["PATH"] = f"{directory}{os.pathsep}{environment['PATH']}"
+            result = subprocess.run(
+                [str(LAUNCHER), "--print-python"],
+                text=True,
+                capture_output=True,
+                env=environment,
+                check=False,
+            )
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(
+            Path(sys.executable).resolve(),
+            Path(result.stdout.strip()).resolve(),
+        )
+
+    def test_launcher_checks_repository_virtualenv_before_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repository"
+            repository.mkdir()
+            repository_python = repository / ".venv" / "bin" / "python"
+            repository_python.parent.mkdir(parents=True)
+            repository_python.write_text(
+                f"#!/bin/sh\nexec {shlex.quote(sys.executable)} \"$@\"\n",
+                encoding="utf-8",
+            )
+            repository_python.chmod(0o755)
+
+            unusable_path = Path(directory) / "path"
+            unusable_path.mkdir()
+            for name in ("python3", "python"):
+                candidate = unusable_path / name
+                candidate.write_text("#!/bin/sh\nexit 7\n", encoding="utf-8")
+                candidate.chmod(0o755)
+
+            environment = os.environ.copy()
+            environment.pop("ADR_PYTHON", None)
+            environment.pop("VIRTUAL_ENV", None)
+            environment["PATH"] = f"{unusable_path}{os.pathsep}{environment['PATH']}"
+            result = subprocess.run(
+                [str(LAUNCHER), "--print-python", "--root", str(repository)],
+                text=True,
+                capture_output=True,
+                env=environment,
+                check=False,
+            )
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(
+            Path(sys.executable).resolve(),
+            Path(result.stdout.strip()).resolve(),
+        )
 
     def test_dogfood_records_and_index_validate(self) -> None:
         result = self.run_cli("validate", ROOT)
@@ -442,7 +561,7 @@ class AdrToolTests(unittest.TestCase):
         )
         self.assertEqual(2, result.returncode)
         self.assertIn("PyYAML is required", result.stderr)
-        self.assertIn("pip install PyYAML", result.stderr)
+        self.assertIn("scripts/adr", result.stderr)
 
 
 if __name__ == "__main__":

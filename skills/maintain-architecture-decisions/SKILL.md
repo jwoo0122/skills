@@ -40,7 +40,7 @@ The coordinator owns ADR writes. Implementers, researchers, diagnosticians, and 
 Initialize `adr/` when the first durable architectural decision is confirmed:
 
 ```sh
-python3 <skill-root>/scripts/adr.py init --root <repository-root>
+<skill-root>/scripts/adr init --root <repository-root>
 ```
 
 Initialization marks ownership and schema version. Refuse to adopt a non-empty `adr/` without a compatible marker; never follow symlinks outside the repository.
@@ -50,11 +50,11 @@ Store records as `adr/records/<scope>/<question>.md`. Use semantic IDs such as `
 After editing records, rebuild and validate the index:
 
 ```sh
-python3 <skill-root>/scripts/adr.py reindex --root <repository-root>
-python3 <skill-root>/scripts/adr.py validate --root <repository-root>
+<skill-root>/scripts/adr reindex --root <repository-root>
+<skill-root>/scripts/adr validate --root <repository-root>
 ```
 
-The script validates syntax, duplicate keys, IDs, status, paths, relationships, complete sections, and index freshness. Reindexing replaces the index atomically and can recover a missing index in a marked ADR system. It does not decide whether an intent is architecturally important.
+The launcher checks candidate Python interpreters by importing PyYAML, then runs the structural tool with the selected interpreter. It never installs packages. Set `ADR_PYTHON` to override discovery. The tool validates syntax, duplicate keys, IDs, status, paths, relationships, complete sections, and index freshness. Reindexing replaces the index atomically and can recover a missing index in a marked ADR system. It does not decide whether an intent is architecturally important.
 
 ## Hand off
 

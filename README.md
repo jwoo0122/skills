@@ -64,13 +64,13 @@ npx skills add OWNER/REPOSITORY --skill '*'
 
 Project installation is the default. Add `--global` for a user-level installation or `--agent <agent>` to select a supported harness. Start a new agent session if the harness builds its skill catalog only at session start.
 
-ADR structural validation uses PyYAML. Confirm it in the Python environment used by the agent:
+ADR structural validation uses PyYAML. The bundled launcher checks installed Python interpreters and uses one that can import it:
 
 ```sh
-python3 -c 'import yaml; print(yaml.__version__)'
+skills/maintain-architecture-decisions/scripts/adr --print-python
 ```
 
-The skill reports a precise validation boundary when PyYAML is unavailable; it does not install Python packages or edit persistent agent-instruction files on its own.
+The launcher never installs Python packages. Set `ADR_PYTHON` to choose an interpreter explicitly; if no candidate can import PyYAML, it reports the environment boundary without editing ADR files.
 
 ## Usage
 
@@ -114,9 +114,9 @@ Records use stable semantic IDs and own an architectural decision question. The 
 The maintenance tool supports:
 
 ```sh
-python3 skills/maintain-architecture-decisions/scripts/adr.py init
-python3 skills/maintain-architecture-decisions/scripts/adr.py reindex
-python3 skills/maintain-architecture-decisions/scripts/adr.py validate
+skills/maintain-architecture-decisions/scripts/adr init
+skills/maintain-architecture-decisions/scripts/adr reindex
+skills/maintain-architecture-decisions/scripts/adr validate
 ```
 
 ## Why I think this structure fits the purpose

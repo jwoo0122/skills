@@ -16,7 +16,7 @@ depends_on:
   - interaction.material-ambiguity-loop
 supersedes: []
 superseded_by: []
-last_reviewed: "2026-07-15"
+last_reviewed: "2026-07-16"
 ---
 
 # Semantic living architecture decisions
@@ -41,6 +41,7 @@ Code reveals implementation but often not why a boundary, authority, compatibili
 - Supersession relationships are bidirectional.
 - One logical writer owns ADR changes; workers and reviewers report candidates and conflicts.
 - Deterministic tooling validates structure, not architectural importance.
+- ADR operations use a repository-provided, side-effect-free launcher that selects an interpreter capable of importing its required dependencies without installing packages.
 
 ## Alternatives and trade-offs
 
@@ -52,7 +53,7 @@ Agents can load a small relevant decision subset and avoid re-asking settled int
 
 ## Enforcement
 
-The ADR script validates semantic IDs, paths, statuses, relationships, required sections, index freshness, and idempotent indexing. Reviewers compare changes with relevant accepted records.
+The ADR launcher reports the selected Python interpreter and PyYAML location, then runs the structural tool with that same interpreter. It never installs dependencies. The tool validates semantic IDs, paths, statuses, relationships, required sections, index freshness, and idempotent indexing. Reviewers compare changes with relevant accepted records.
 
 ## Revisit when
 

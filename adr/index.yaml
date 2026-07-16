@@ -19,7 +19,7 @@ decisions:
       - interaction.material-ambiguity-loop
     supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-15'
+    last_reviewed: '2026-07-16'
   - id: execution.adaptive-delegation
     status: accepted
     scope: execution

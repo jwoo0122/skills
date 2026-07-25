@@ -27,6 +27,8 @@ For supersession, populate `supersedes` on the replacement and `superseded_by` o
 - Phrase the current decision and invariants normatively.
 - Record only alternatives future agents are likely to reconsider.
 - Name tests, linters, schemas, or review points that enforce the decision.
+- For accepted records, declare at least one repository-relative `enforcement` check when a deterministic source assertion is available. Use `must_contain` and `must_not_contain` for explicit tokens, and keep behavioral meaning in tests or other executable checks.
+- When deterministic enforcement is not appropriate, declare `enforcement_exception` with `manual`, `not-applicable`, or `deferred` status, a concrete reason, evidence, and observable revisit conditions. Never leave an accepted ADR silently unenforced.
 - State observable conditions that justify reopening the decision.
 - Keep implementation narration and chronological meeting notes out of the record.
 

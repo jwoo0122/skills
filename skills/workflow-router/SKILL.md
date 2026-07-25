@@ -18,7 +18,8 @@ Before broad code inspection or any edit:
 
 1. Read active repository instructions and the user's scope limits.
 2. If `adr/index.yaml` exists, read it and select records relevant to likely paths, scopes, topics, and linked decisions. If it does not exist, continue without creating it.
-3. Inspect only enough code, tests, public behavior, Git state, and external evidence to distinguish repository facts from choices that require the user.
+3. When an ADR system exists, run its source-conformance gate before editing to establish whether the baseline already satisfies accepted decisions. A baseline failure is evidence to surface and reconcile; do not silently treat it as caused by the new task.
+4. Inspect only enough code, tests, public behavior, Git state, and external evidence to distinguish repository facts from choices that require the user.
 
 Answer:
 

@@ -17,6 +17,16 @@ depends_on:
 supersedes: []
 superseded_by: []
 last_reviewed: "2026-07-16"
+enforcement:
+  - id: checker-implementation
+    path: skills/maintain-architecture-decisions/scripts/adr.py
+    must_contain:
+      - "def enforce_repository"
+      - "enforcement failed:"
+  - id: workflow-gate-documentation
+    path: skills/maintain-architecture-decisions/SKILL.md
+    must_contain:
+      - "scripts/adr check"
 ---
 
 # Semantic living architecture decisions
@@ -40,7 +50,8 @@ Code reveals implementation but often not why a boundary, authority, compatibili
 - Accepted decisions remain open to explicit correction, reversal, supersession, and retirement.
 - Supersession relationships are bidirectional.
 - One logical writer owns ADR changes; workers and reviewers report candidates and conflicts.
-- Deterministic tooling validates structure, not architectural importance.
+- Deterministic tooling validates structure and declared source-conformance assertions, not architectural importance or unconstrained prose.
+- Every accepted record MUST declare at least one repository-relative enforcement check or an explicit, evidenced enforcement exception; the gate MUST run before and after an authorized implementation.
 - ADR operations use a repository-provided, side-effect-free launcher that selects an interpreter capable of importing its required dependencies without installing packages.
 
 ## Alternatives and trade-offs
@@ -53,7 +64,7 @@ Agents can load a small relevant decision subset and avoid re-asking settled int
 
 ## Enforcement
 
-The ADR launcher reports the selected Python interpreter and PyYAML location, then runs the structural tool with that same interpreter. It never installs dependencies. The tool validates semantic IDs, paths, statuses, relationships, required sections, index freshness, and idempotent indexing. Reviewers compare changes with relevant accepted records.
+The ADR launcher reports the selected Python interpreter and PyYAML location, then runs the structural and source-conformance tool with that same interpreter. It never installs dependencies. The tool validates semantic IDs, paths, statuses, relationships, required sections, index freshness, enforcement declarations, and idempotent indexing. `adr check` reads every accepted record's declared targets and fails on an explicit source mismatch or undocumented enforcement exception. Reviewers compare changes with relevant accepted records and the gate result.
 
 ## Revisit when
 

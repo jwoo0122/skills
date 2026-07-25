@@ -15,6 +15,15 @@ depends_on:
 supersedes: []
 superseded_by: []
 last_reviewed: "2026-07-15"
+enforcement:
+  - id: implementation-gate
+    path: skills/execute-to-pr/SKILL.md
+    must_contain:
+      - "Run the ADR conformance gate before review and delivery."
+  - id: independent-review-gate
+    path: skills/review-change/SKILL.md
+    must_contain:
+      - "Run the ADR conformance gate"
 ---
 
 # Adaptive implementation and verification

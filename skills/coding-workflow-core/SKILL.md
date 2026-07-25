@@ -50,8 +50,9 @@ These are required outcomes, regardless of the chosen workflow shape:
 4. Keep durable architectural intent in the ADR system when authorized; keep question queues, plans, and task state transient.
 5. Give every implementation unit a bounded outcome, constraints, relevant ADR subset, and observable acceptance checks.
 6. Verify the resulting behavior. Use a fresh verifier for architecturally significant, high-impact, security-sensitive, or otherwise risky changes.
-7. Never discard, rewrite, stage, commit, push, or include unrelated user changes.
-8. Stop at the requested delivery boundary. Local implementation authority does not grant commit, push, or pull-request authority.
+7. Run the ADR source-conformance gate before and after implementation when an ADR system exists; a failing gate is unfinished work until code, an explicit enforcement exception, or authorized ADR intent is reconciled.
+8. Never discard, rewrite, stage, commit, push, or include unrelated user changes.
+9. Stop at the requested delivery boundary. Local implementation authority does not grant commit, push, or pull-request authority.
 
 ## Leave judgment as heuristics
 
@@ -76,6 +77,7 @@ Treat `adr/` as a structured, revisable map of architectural decisions that code
 - Keep revision and supersession relationships explicit so future agents can challenge or reverse a decision without losing its context.
 - Give one coordinator or architecture-decision maintainer logical write ownership. Workers, diagnosticians, researchers, and reviewers report conflicts or stale records and never edit `adr/**`.
 - Validate and reindex ADR records after an ADR write.
+- Run `skills/maintain-architecture-decisions/scripts/adr check --root <repository-root>` against the baseline and final source; it mechanically enforces each accepted record's declared checks.
 
 ## Maintain compact workflow state
 

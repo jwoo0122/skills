@@ -219,5 +219,19 @@
     },
     "must": ["record the baseline", "keep one writer", "stage only task changes"],
     "must_not": ["discard unrelated changes", "commit unrelated changes", "parallelize shared writers"]
+  },
+  {
+    "id": "adr-source-drift-gate",
+    "entry_skill": "clarify-and-plan",
+    "prompt": "Implement the documented identity authority change and open a draft PR.",
+    "fixture": "an accepted ADR declares a source-conformance check that the baseline or implementation violates",
+    "expected_facets": {
+      "clarification": ["proceed", "ask"],
+      "adr": ["reference", "reconcile"],
+      "execution": ["direct", "delegate"],
+      "verification": ["self", "independent"]
+    },
+    "must": ["run the ADR source-conformance gate", "distinguish a baseline failure from a regression", "stop delivery until code or authorized ADR intent is reconciled"],
+    "must_not": ["treat a failing check as a warning", "weaken or delete the enforcement declaration", "claim conformance without command evidence"]
   }
 ]

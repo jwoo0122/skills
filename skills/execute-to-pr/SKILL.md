@@ -63,6 +63,7 @@ Reserve every `adr/**` path for the coordinator's architecture-decision writer r
 ## Verify and iterate
 
 - Run targeted checks while iterating.
+- Run the ADR conformance gate before review and delivery.
 - Run every repository-required pre-PR check that applies to the changed area.
 - Capture command names and outcomes.
 - Fix in-scope failures and rerun until they pass.
@@ -72,6 +73,7 @@ Reserve every `adr/**` path for the coordinator's architecture-decision writer r
 ## Reconcile architecture decisions
 
 Reassess the completed diff against the relevant ADR subset before review.
+Run the ADR conformance gate again after any ADR reconciliation and before the selected delivery boundary.
 
 - If it follows an accepted decision, do not edit the ADR merely to restate the implementation.
 - If an accepted decision's scope, invariant, consequence, or enforcement pointer became stale, invoke `maintain-architecture-decisions` through the coordinator's single-writer role.

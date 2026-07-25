@@ -165,7 +165,7 @@ class AdrToolTests(unittest.TestCase):
 
     def test_dogfood_enforcement_checks_pass(self) -> None:
         result = self.run_cli("check", ROOT)
-        self.assertIn("check: ok (8 enforcement checks)", result.stdout)
+        self.assertIn("check: ok (9 enforcement checks)", result.stdout)
 
     def test_enforcement_detects_source_drift(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -216,7 +216,7 @@ class AdrToolTests(unittest.TestCase):
             record.write_text(text[:start] + exception + text[end:], encoding="utf-8")
             self.run_cli("reindex", root)
             result = self.run_cli("check", root)
-            self.assertIn("6 enforcement checks, 1 declared exception", result.stdout)
+            self.assertIn("7 enforcement checks, 1 declared exception", result.stdout)
 
     def test_enforcement_requires_nonempty_checks_for_accepted_records(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

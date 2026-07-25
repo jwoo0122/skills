@@ -40,6 +40,7 @@ Premature implementation silently chooses product intent. Conversely, asking abo
 
 ## Invariants
 
+- The clarification judgment is `proceed` or `ask`, decided by unresolved material ambiguity rather than request size.
 - Repository facts and accepted ADRs are investigated before asking the user.
 - Dependent questions are asked after their prerequisites; independent high-value questions may be grouped.
 - Vague or contradictory answers are narrowed rather than silently interpreted.

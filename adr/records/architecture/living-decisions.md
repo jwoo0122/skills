@@ -25,6 +25,10 @@ enforcement:
     path: skills/maintain-architecture-decisions/SKILL.md
     must_contain:
       - "scripts/adr check"
+  - id: implementation-gate
+    path: skills/execute-to-pr/SKILL.md
+    must_contain:
+      - "Run the ADR conformance gate before and after implementation."
 ---
 
 # Semantic living architecture decisions

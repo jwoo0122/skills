@@ -28,6 +28,10 @@ decisions:
         path: skills/maintain-architecture-decisions/SKILL.md
         must_contain:
           - scripts/adr check
+      - id: implementation-gate
+        path: skills/execute-to-pr/SKILL.md
+        must_contain:
+          - Run the ADR conformance gate before and after implementation.
     enforcement_exception: null
   - id: execution.adaptive-delegation
     status: superseded
@@ -95,8 +99,8 @@ decisions:
     status: accepted
     scope: workflow
     decision_type: workflow
-    summary: Constrain the workflow with explicit authority boundaries instead of
-      a facet or delegation topology.
+    summary: Constrain authority, durable architectural intent, and the independence
+      of evidence; leave execution tactics to the model.
     applies_to:
       - skills/clarify-and-plan/**
       - skills/execute-to-pr/**
@@ -117,11 +121,12 @@ decisions:
         must_contain:
           - 'mode: read-only | change'
           - 'delivery_boundary: answer | plan | local-change | commit | draft-pr'
-      - id: implementation-gate
+          - default to `local-change` without asking
+      - id: independent-review
         path: skills/execute-to-pr/SKILL.md
         must_contain:
-          - Run the ADR conformance gate before and after implementation.
           - obtain a review from a context that did not write the change
+          - Never escalate `local-change` to commit
     enforcement_exception: null
   - id: workflow.public-entrypoint
     status: accepted

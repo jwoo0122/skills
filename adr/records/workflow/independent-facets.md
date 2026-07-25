@@ -19,7 +19,7 @@ enforcement_exception: null
 
 # Independent workflow facets
 
-Superseded by `workflow.minimal-authority-boundary`. The `mode` and `delivery_boundary` boundaries and the `adr` action survive there. The `execution` and `verification` facets were withdrawn because they prescribed orchestration shape without producing an observable difference in behavior, and the `workflow-router` and `coding-workflow-core` skills that carried them were removed.
+Superseded by `workflow.minimal-authority-boundary`. The `mode` and `delivery_boundary` boundaries survive there; the `adr` action remains governed by `architecture.living-decisions`. The `execution` and `verification` facets were withdrawn because they prescribed orchestration shape without producing an observable difference in behavior, and the `workflow-router` and `coding-workflow-core` skills that carried them were removed.
 
 ## Decision question
 
@@ -27,7 +27,7 @@ How should the workflow represent decisions that do not correlate with code-chan
 
 ## Current decision
 
-The router MUST assess clarification, architecture impact, execution strategy, and verification strategy independently. It MUST NOT collapse them into one linear size-based route. It MUST evaluate those facets inside an explicit read-only/change mode and stop at the user's authorized delivery boundary.
+This decision is no longer in force. It required a dedicated router stage to assess clarification, architecture impact, execution strategy, and verification strategy as four independent facets, rather than collapsing them into one linear size-based route, and to evaluate those facets inside an explicit read-only/change mode.
 
 ## Context and forces
 
@@ -35,14 +35,18 @@ A tiny diff can carry a major architectural decision, while a large mechanical m
 
 ## Invariants
 
-- Clarification is `proceed` or `ask` based on material ambiguity.
-- Architecture is `none`, `reference`, or `reconcile` based on durable intent.
-- Execution is `direct`, `delegate`, or `decompose` based on implementation shape.
-- Verification is `self`, `independent`, or `multi-axis` based on risk and significance.
-- Request size alone never forces questions or delegation.
-- Read-only work does not invent an implementation topology or mutate ADRs.
-- Permission to implement does not imply permission to commit, push, or open a pull request.
-- A change request without explicit commit or remote authority defaults to local work without a delivery question or branch switch.
+The withdrawn decision required:
+
+- clarification to be `proceed` or `ask` based on material ambiguity;
+- architecture to be `none`, `reference`, or `reconcile` based on durable intent;
+- execution to be `direct`, `delegate`, or `decompose` based on implementation shape;
+- verification to be `self`, `independent`, or `multi-axis` based on risk and significance;
+- request size alone never to force questions or delegation;
+- read-only work never to invent an implementation topology or mutate ADRs;
+- permission to implement never to imply permission to commit, push, or open a pull request;
+- a change request without explicit commit or remote authority to default to local work.
+
+The last four survive in `workflow.minimal-authority-boundary`. The `execution` and `verification` scales did not.
 
 ## Alternatives and trade-offs
 
@@ -54,7 +58,7 @@ Different capable models may choose different valid tactics while still honoring
 
 ## Enforcement
 
-Routing scenarios cover small architectural changes, large ADR-defined changes, and ordinary local fixes with facet-specific expectations.
+While in force, routing scenarios covered small architectural changes, large ADR-defined changes, and ordinary local fixes with facet-specific expectations. Those scenarios now assert the successor's vocabulary.
 
 ## Revisit when
 

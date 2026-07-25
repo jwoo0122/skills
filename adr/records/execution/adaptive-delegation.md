@@ -27,7 +27,7 @@ How should implementation and verification roles scale after intent is sufficien
 
 ## Current decision
 
-The coordinator MUST choose direct work, delegation, or decomposition from the implementation shape and MUST choose verification depth independently from risk and architectural significance. Architecturally meaningful changes MUST receive independent verification even when the code edit is small.
+This decision is no longer in force. It required a coordinator to choose direct work, delegation, or decomposition from the implementation shape, to choose verification depth independently from risk and architectural significance, and to give architecturally meaningful changes independent verification even when the code edit was small. Only the last requirement survives, in `workflow.minimal-authority-boundary`.
 
 ## Context and forces
 
@@ -35,12 +35,9 @@ Question count and ADR edits measure intent discovery, not implementation parall
 
 ## Invariants
 
-- The coordinator retains user intent, ADR reconciliation, integration, and final evidence.
-- Delegated workers receive bounded work packets and only relevant ADRs.
-- Shared worktrees avoid concurrent overlapping writers unless isolation is explicit.
-- Reviewers inspect requirements, relevant ADRs, raw diffs, and verification evidence independently of implementer summaries.
-- Implementers and reviewers report ADR conflicts but do not concurrently edit `adr/`.
-- New material ambiguity returns to clarification before work continues.
+The withdrawn decision required a coordinator to retain user intent, ADR reconciliation, integration, and final evidence; delegated workers to receive bounded work packets and only relevant ADRs; shared worktrees to avoid concurrent overlapping writers; reviewers to inspect requirements, relevant ADRs, raw diffs, and verification evidence independently of implementer summaries; implementers and reviewers to report ADR conflicts without editing `adr/`; and new material ambiguity to return to clarification.
+
+The reviewer-independence and single-ADR-writer requirements survive, in `workflow.minimal-authority-boundary` and `architecture.living-decisions` respectively. The delegation and worktree topology did not.
 
 ## Alternatives and trade-offs
 
@@ -52,7 +49,7 @@ A coordinator may directly make a tiny high-impact edit and delegate only review
 
 ## Enforcement
 
-Execution scenarios cover direct-plus-independent-review, decomposed implementation, shared-worktree ownership, and reviewer detection of ADR conflicts.
+While in force, execution scenarios covered direct-plus-independent-review, decomposed implementation, shared-worktree ownership, and reviewer detection of ADR conflicts. Only the independent-review expectation is still asserted.
 
 ## Revisit when
 

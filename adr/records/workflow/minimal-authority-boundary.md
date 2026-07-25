@@ -6,7 +6,7 @@ decision_type: workflow
 applies_to:
   - skills/clarify-and-plan/**
   - skills/execute-to-pr/**
-summary: "Constrain the workflow with explicit authority boundaries instead of a facet or delegation topology."
+summary: "Constrain authority, durable architectural intent, and the independence of evidence; leave execution tactics to the model."
 constrains:
   - interaction.material-ambiguity-loop
   - architecture.living-decisions
@@ -23,11 +23,12 @@ enforcement:
     must_contain:
       - "mode: read-only | change"
       - "delivery_boundary: answer | plan | local-change | commit | draft-pr"
-  - id: implementation-gate
+      - "default to `local-change` without asking"
+  - id: independent-review
     path: skills/execute-to-pr/SKILL.md
     must_contain:
-      - "Run the ADR conformance gate before and after implementation."
       - "obtain a review from a context that did not write the change"
+      - "Never escalate `local-change` to commit"
 ---
 
 # Minimal authority boundary
@@ -38,7 +39,9 @@ What must the workflow constrain, and what must it leave to the model running it
 
 ## Current decision
 
-The workflow MUST constrain three things: the authority boundary of a request, the durable architectural intent it touches, and the independence of the evidence that a risky change is correct. It MUST record `mode` as `read-only` or `change` and stop at the user's authorized `delivery_boundary` of `answer`, `plan`, `local-change`, `commit`, or `draft-pr`. It MUST obtain a review from a context that did not write the change when that change is architecturally significant, security-sensitive, or expensive to reverse. It MUST NOT prescribe an execution topology, a delegation policy, a reviewer count, or a routing table; those tactics belong to the model and the harness.
+The workflow MUST constrain exactly two things beyond the durable architectural intent that `architecture.living-decisions` already owns: the authority boundary of a request, and the independence of the evidence that a risky change is correct.
+
+It MUST record `mode` as `read-only` or `change` and stop at the user's authorized `delivery_boundary` of `answer`, `plan`, `local-change`, `commit`, or `draft-pr`. It MUST obtain a review from a context that did not write the change when that change is architecturally significant, security-sensitive, or expensive to reverse. It MUST NOT prescribe an execution topology, a delegation policy, a reviewer count, or a routing table; those tactics belong to the model and the harness.
 
 ## Context and forces
 
@@ -51,7 +54,6 @@ The superseded records described a four-facet router and an adaptive delegation 
 - Permission to implement never implies permission to commit, push, or open a pull request.
 - Read-only work does not mutate the repository or `adr/`.
 - Request size alone never forces or suppresses clarification.
-- The ADR conformance gate runs before and after an authorized implementation.
 - An architecturally significant, security-sensitive, or hard-to-reverse change is reviewed by a context that did not write it, regardless of diff size.
 - A reviewing context receives the brief, relevant ADRs, the raw diff, and verification evidence rather than the implementer's summary, and does not edit the files it judges.
 - Execution tactics, including whether to delegate bounded work and which context supplies the review, are left to the model and are not encoded as workflow policy.
@@ -66,7 +68,7 @@ The skill set shrinks to clarification, architectural memory, and bounded delive
 
 ## Enforcement
 
-`adr check` asserts that the clarification stage declares both authority boundaries and that the execution stage declares the conformance gate and the independent-review requirement. Forward-test scenarios cover implicit local delivery, blocked remote delivery, read-only requests, and small changes with large architectural meaning.
+`adr check` asserts that the clarification stage declares both authority boundaries and the least-authority default, and that the execution stage declares the independent-review requirement and refuses to escalate a local change. Gate timing is enforced separately by `architecture.living-decisions`. Forward-test scenarios cover implicit local delivery, blocked remote delivery, read-only requests, and small changes with large architectural meaning.
 
 ## Revisit when
 

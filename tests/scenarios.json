@@ -369,38 +369,6 @@
     "fixture": "no reliable reproduction or root cause is known"
   },
   {
-    "id": "external-evidence-dependency",
-    "entry_skill": "clarify-and-plan",
-    "prompt": "Update the OAuth integration to the provider's currently supported flow.",
-    "expected_facets": {
-      "mode": [
-        "change"
-      ],
-      "clarification": [
-        "proceed",
-        "ask"
-      ],
-      "adr": [
-        "reference",
-        "reconcile"
-      ],
-      "delivery_boundary": [
-        "local-change"
-      ]
-    },
-    "must": [
-      "research primary current sources",
-      "cite externally verifiable claims",
-      "report ADR impact without editing records"
-    ],
-    "must_not": [
-      "rely on remembered provider behavior",
-      "implement before the provider behavior is confirmed",
-      "persist a research file by default"
-    ],
-    "fixture": "the correct choice depends on current official provider documentation"
-  },
-  {
     "id": "local-only-delivery-boundary",
     "entry_skill": "clarify-and-plan",
     "prompt": "Implement the cache-key fix and run tests, but do not commit or push.",

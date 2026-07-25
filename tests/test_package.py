@@ -135,7 +135,6 @@ def check_scenarios() -> None:
         "improve-stale-adr-scope",
         "midstream-adr-conflict",
         "bug-without-reproduction",
-        "external-evidence-dependency",
         "local-only-delivery-boundary",
         "adr-source-drift-gate",
     }

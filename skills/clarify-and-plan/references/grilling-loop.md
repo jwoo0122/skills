@@ -38,7 +38,7 @@ Stop when all are true:
 - remaining assumptions are reversible, low impact, and disclosed;
 - important behavior has an observable success or failure check;
 - relevant accepted ADRs are either followed or deliberately reconciled; and
-- implementation units can receive bounded work packets.
+- implementation units are bounded and can be started independently.
 
 Continue when any material decision is merely implied, an answer still admits divergent outcomes, or implementation would force a worker to invent product or architectural intent.
 

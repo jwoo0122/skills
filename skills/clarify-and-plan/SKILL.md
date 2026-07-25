@@ -28,7 +28,7 @@ Before asking a question:
 
 1. Read active repository instructions and the user's scope limits.
 2. Read `adr/index.yaml` when it exists and load only decisions relevant to likely paths, scopes, topics, and linked records. Do not create `adr/` just to begin clarification.
-3. When an ADR system exists, run `skills/maintain-architecture-decisions/scripts/adr check --root <repository-root>` against the unmodified baseline. A baseline failure is evidence to surface, not a defect caused by the new task.
+3. When an ADR system exists, run `<maintain-architecture-decisions skill root>/scripts/adr check --root <repository-root>` against the unmodified baseline. A baseline failure is evidence to surface, not a defect caused by the new task.
 4. Inspect relevant code, tests, public interfaces, conventions, and Git state.
 5. Separate facts established by that evidence from choices only the user can make.
 
@@ -80,7 +80,7 @@ Do not let ADR reconciliation silently decide an unresolved product or architect
 
 ## Produce the implementation brief
 
-State a compact handoff:
+Skip this section when the delivery boundary is `answer`; a read-only request is answered with evidence, not with a brief. Otherwise state a compact handoff:
 
 ```text
 Goal:
@@ -107,4 +107,10 @@ Exit only when:
 - durable architectural intent is reconciled or proposed within the authorized scope; and
 - implementation units have enough context to start.
 
-If `mode=change`, activate `execute-to-pr` immediately with the brief, the relevant ADR subset, and the explicit delivery boundary. Ask again only when required authority or a material decision is still missing, or when the next action is irreversible, destructive, or scope-expanding beyond what the user authorized. If implementation later exposes a new material ambiguity, return to this loop.
+Then continue according to the authorized delivery boundary:
+
+- For `answer`, perform the bounded inspection yourself, return the evidenced answer, and report any proposed ADR action without mutating the repository. Do not produce an implementation brief and do not activate an implementation stage.
+- For `plan`, return the brief itself as the deliverable, including the proposed ADR action, and stop.
+- For `local-change`, `commit`, or `draft-pr`, activate `execute-to-pr` immediately with the brief, the relevant ADR subset, and the explicit delivery boundary.
+
+Ask again only when required authority or a material decision is still missing, or when the next action is irreversible, destructive, or scope-expanding beyond what the user authorized. If implementation later exposes a new material ambiguity, return to this loop.

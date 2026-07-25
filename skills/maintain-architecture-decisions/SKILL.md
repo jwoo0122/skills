@@ -33,7 +33,7 @@ Do not create an ADR for local implementation details, routine bug fixes, test n
 
 ## Keep one logical writer
 
-The coordinator owns ADR writes. Implementers, researchers, diagnosticians, and reviewers return relevant IDs, conflicts, and proposed actions; they do not edit `adr/` concurrently. The coordinator may apply this skill directly or delegate one bounded ADR-maintainer task.
+One role owns ADR writes for a task. Any other context, including a delegated implementer, returns relevant IDs, conflicts, and proposed actions instead of editing `adr/` concurrently.
 
 ## Maintain the living structure
 
@@ -61,7 +61,7 @@ The launcher checks candidate Python interpreters by importing PyYAML, then runs
 
 ## Hand off
 
-Before implementation, provide the coordinator with:
+Before implementation, hand back:
 
 ```text
 adr_action:
@@ -71,4 +71,4 @@ conflicts:
 implementation_invariants:
 ```
 
-Return to clarification if a conflict remains. Otherwise give implementers and reviewers only the relevant records and invariants.
+Return to clarification if a conflict remains. Otherwise carry only the relevant records and invariants into implementation.

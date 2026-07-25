@@ -1,32 +1,25 @@
 ---
 id: execution.adaptive-delegation
-status: accepted
+status: superseded
 scope: execution
 decision_type: workflow
 applies_to:
   - skills/execute-to-pr/**
-  - skills/review-change/**
-  - skills/coding-workflow-core/**
 summary: "Scale implementer delegation and independent verification to execution shape and risk."
 constrains: []
 depends_on:
   - architecture.living-decisions
-  - workflow.independent-facets
 supersedes: []
-superseded_by: []
-last_reviewed: "2026-07-15"
-enforcement:
-  - id: implementation-gate
-    path: skills/execute-to-pr/SKILL.md
-    must_contain:
-      - "Run the ADR conformance gate before review and delivery."
-  - id: independent-review-gate
-    path: skills/review-change/SKILL.md
-    must_contain:
-      - "Run the ADR conformance gate"
+superseded_by:
+  - workflow.minimal-authority-boundary
+last_reviewed: "2026-07-26"
+enforcement: []
+enforcement_exception: null
 ---
 
 # Adaptive implementation and verification
+
+Superseded by `workflow.minimal-authority-boundary`. The ADR conformance gate survives there as an execution requirement. The delegation and reviewer topology was withdrawn: it duplicated harness-level and user-level instructions that already govern subagent use, and the `review-change` skill that carried the independent-review role was removed.
 
 ## Decision question
 

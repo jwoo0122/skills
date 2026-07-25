@@ -1,46 +1,39 @@
 # Autonomous Coding Workflow Skills
 
-This package gives coding agents a durable minimum workflow for turning one user request into an appropriately clarified, architecturally coherent, implemented, and verified change, with independent review when impact warrants it.
+This package gives coding agents a durable minimum workflow for turning one user request into an appropriately clarified, architecturally coherent, implemented, and verified change.
 
-The user starts one public skill. The agent then decides how much clarification, architectural reconciliation, delegation, and verification the actual work needs:
+The user starts one public skill. The agent then decides how much clarification and architectural reconciliation the actual work needs, and stops at the authority boundary the user granted:
 
 ```text
 clarify-and-plan (only public entry point)
-  -> workflow-router
-     -> inspect repository and relevant ADRs
-     -> clarify material ambiguity when necessary
-     -> reconcile durable architectural intent
-     -> execute-to-pr
-        -> work directly or dispatch bounded implementers
-        -> diagnose or research when evidence is missing
-        -> review independently when impact warrants it
-        -> verify, commit, push, and open a draft PR when authorized
+  -> record mode and delivery boundary
+  -> inspect repository and relevant ADRs
+  -> clarify material ambiguity until none remains
+  -> reconcile durable architectural intent
+  -> execute-to-pr
+     -> implement, run the ADR conformance gate, verify
+     -> stop at local changes, or commit, push, and open a draft PR when authorized
 ```
 
 ## Purpose
 
 The skill set is designed to reduce two recurring failures in agentic coding:
 
-1. A lightweight task is buried under ritual questions, planning artifacts, and unnecessary delegation.
-2. A consequential task is implemented from guessed intent, without persistent architectural context or an independent check.
+1. A lightweight task is buried under ritual questions and planning artifacts.
+2. A consequential task is implemented from guessed intent, without persistent architectural context.
 
-It keeps the workflow adaptive rather than deterministic. A clear typo can be fixed directly. A vague product change is grilled until material ambiguity is resolved. A one-line change with system-wide meaning can update an architecture decision and receive independent review. A large but fully specified migration can skip product questions and use bounded parallel work.
+It keeps the workflow adaptive rather than deterministic. A clear typo can be fixed directly. A vague product change is grilled until material ambiguity is resolved. A one-line change with system-wide meaning can update an architecture decision. A large but fully specified migration can skip product questions entirely.
 
 The package also maintains `adr/` as revisable architectural memory: durable intent that code inspection alone cannot reliably recover, organized by semantic decision rather than chronological numbering. ADRs constrain future work without becoming immutable; later evidence can improve, challenge, revise, split, supersede, or retire a decision.
 
 ## Included skills
 
-Install all eight skills because the public entry point chains to the other seven by name.
+Install all three skills because the public entry point chains to the other two by name.
 
 ```text
 skills/
   clarify-and-plan/                 public entry, grilling, acceptance
-  workflow-router/                  four-facet adaptive routing
-  coding-workflow-core/             shared workflow invariants
-  execute-to-pr/                    implementation and delivery coordinator
-  diagnose-bug/                     evidence-driven bug diagnosis
-  evidence-research/                read-only primary-source research
-  review-change/                    independent specification and quality review
+  execute-to-pr/                    implementation, verification, delivery boundary
   maintain-architecture-decisions/  semantic ADR maintenance and validation
 ```
 
@@ -87,29 +80,27 @@ Example:
 $clarify-and-plan Add retry support to webhook delivery and open a draft PR.
 ```
 
-After entry, do not invoke each stage manually. The router judges four facets independently:
+After entry, do not invoke each stage manually. The workflow constrains two authority boundaries and one architectural judgment, and leaves execution tactics to the model:
 
 ```text
+mode: read-only | change
+delivery_boundary: answer | plan | local-change | commit | draft-pr
 clarification: proceed | ask
 adr: none | reference | reconcile
-execution: direct | delegate | decompose
-verification: self | independent | multi-axis
 ```
 
-Around those facets it preserves two authority boundaries: `mode` (`read-only` or `change`) and the requested delivery boundary (`answer`, `plan`, `local-change`, `commit`, or `draft-pr`). Permission to edit does not imply permission to commit or push.
+Permission to edit does not imply permission to commit or push. A change request that does not mention delivery defaults to local changes without asking.
 
 - Clarification depends on unresolved consequential choices, not prompt length or code size.
 - ADR handling depends on durable architectural intent, not question count or changed lines.
-- Execution depends on separability, integration cost, and safe ownership boundaries.
-- Verification depends on impact, uncertainty, and the value of a fresh perspective.
 
 The workflow continues automatically until it reaches the requested boundary: an answer, a plan, verified local changes, a local commit, or a confirmed draft pull request. Explicit limits such as “plan only,” “do not commit,” or “stop after tests” remain authoritative.
 
 ### ADR behavior
 
-When `adr/index.yaml` exists, the router reads it first and loads only relevant records. The workflow does not create `adr/` for a routine task. It initializes the structure when an authorized change establishes durable architectural intent worth preserving.
+When `adr/index.yaml` exists, the workflow reads it first and loads only relevant records. The workflow does not create `adr/` for a routine task. It initializes the structure when an authorized change establishes durable architectural intent worth preserving.
 
-Records use stable semantic IDs and own an architectural decision question. The workflow prefers improving or revising that record over appending a new file. A single coordinator owns ADR writes; implementers, researchers, and reviewers return conflicts or improvement candidates instead of racing to edit architectural intent.
+Records use stable semantic IDs and own an architectural decision question. The workflow prefers improving or revising that record over appending a new file. One role owns ADR writes for a task; any other context returns conflicts or improvement candidates instead of racing to edit architectural intent.
 
 The maintenance tool supports:
 
@@ -128,9 +119,9 @@ Accepted ADRs may declare repository-relative `enforcement` checks (`must_contai
 
 The durable output of that conversation should not be a linear pile of decision logs. It should be structured architectural intent: the reasons, boundaries, invariants, and trade-offs that future agents cannot reliably reconstruct by scanning code. That intent must remain open to correction, contradiction, and reversal as evidence changes. Used this way, ADRs reduce the variance between models by narrowing how much hidden intent each model has to guess.
 
-Clarification difficulty, architectural significance, implementation size, and verification risk are different dimensions. Coupling them would make the workflow brittle: a tiny edit can carry a major system decision, while a large mechanical migration can be unambiguous. The four-facet router preserves that distinction and leaves concrete tactics to the model.
+Clarification difficulty, architectural significance, and implementation size are different dimensions. Coupling them would make the workflow brittle: a tiny edit can carry a major system decision, while a large mechanical migration can be unambiguous. The workflow keeps them separate and leaves concrete tactics to the model.
 
-Subagents follow the same principle. The coordinator retains user intent and integration responsibility; bounded implementers spend context on execution; fresh reviewers spend context on finding mismatches. The skill set requires that separation when it protects the result, but it does not prescribe a fixed number of questions, workers, reviewers, files, or lines. Better future models should be able to use better judgment without being trapped by today's routing thresholds.
+It deliberately does not prescribe an execution topology, a delegation policy, or a reviewer count. Those tactics are already governed by the harness and the user's own instructions, and encoding them here only added prose that a capable model does not need. What a model cannot safely infer is authority: whether a request permits a repository change at all, and whether editing files also permits committing, pushing, or opening a pull request. That is what the workflow constrains, along with the durable architectural intent recorded in `adr/`.
 
 The result is deliberately a set of minimum interaction and engineering invariants, not a workflow engine. It aims to reduce dangerous differences between models while preserving the intelligence, flexibility, and efficiency of the model running it.
 

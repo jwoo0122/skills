@@ -5,22 +5,21 @@ scope: interaction
 decision_type: interaction
 applies_to:
   - skills/clarify-and-plan/**
-  - skills/workflow-router/**
 summary: "Iterate clarification until no unresolved ambiguity can materially change the result."
 constrains:
   - architecture.living-decisions
 depends_on:
-  - workflow.independent-facets
+  - workflow.minimal-authority-boundary
 supersedes: []
 superseded_by: []
-last_reviewed: "2026-07-15"
+last_reviewed: "2026-07-26"
 enforcement:
   - id: stopping-condition
     path: skills/clarify-and-plan/SKILL.md
     must_contain:
       - "Repeat until no material ambiguity remains"
-  - id: evidence-first-routing
-    path: skills/workflow-router/SKILL.md
+  - id: evidence-first-questioning
+    path: skills/clarify-and-plan/SKILL.md
     must_contain:
       - "Ask only for unresolved material choices"
 ---

@@ -1,34 +1,25 @@
 ---
 id: workflow.independent-facets
-status: accepted
+status: superseded
 scope: workflow
 decision_type: workflow
 applies_to:
-  - skills/workflow-router/**
-  - skills/coding-workflow-core/**
+  - skills/clarify-and-plan/**
 summary: "Route clarification, architecture, execution, and verification as independent facets."
-constrains:
-  - interaction.material-ambiguity-loop
-  - execution.adaptive-delegation
+constrains: []
 depends_on:
   - workflow.public-entrypoint
 supersedes: []
-superseded_by: []
-last_reviewed: "2026-07-15"
-enforcement:
-  - id: router-facets
-    path: skills/workflow-router/SKILL.md
-    must_contain:
-      - "| Clarification | `proceed`, `ask` |"
-      - "| Verification | `self`, `independent`, `multi-axis` |"
-  - id: authority-mode
-    path: skills/coding-workflow-core/SKILL.md
-    must_contain:
-      - "mode: read-only | change"
-      - "delivery_boundary: answer | plan | local-change | commit | draft-pr"
+superseded_by:
+  - workflow.minimal-authority-boundary
+last_reviewed: "2026-07-26"
+enforcement: []
+enforcement_exception: null
 ---
 
 # Independent workflow facets
+
+Superseded by `workflow.minimal-authority-boundary`. The `mode` and `delivery_boundary` boundaries and the `adr` action survive there. The `execution` and `verification` facets were withdrawn because they prescribed orchestration shape without producing an observable difference in behavior, and the `workflow-router` and `coding-workflow-core` skills that carried them were removed.
 
 ## Decision question
 

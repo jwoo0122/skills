@@ -6,13 +6,13 @@ Verified against first-party public documentation on 2026-07-14.
 
 The [Agent Skills specification](https://agentskills.io/specification) standardizes a skill directory, `SKILL.md`, required `name` and `description`, optional resources, and progressive disclosure. It does not standardize install locations, explicit invocation syntax, deterministic activation, or the `user-invocable` field.
 
-This package uses the common skill-directory structure plus `user-invocable: false` on the seven internal skills. That extension preserves model invocation while hiding direct user invocation only in harnesses that honor it. `clarify-and-plan` leaves user and model invocation enabled and chains to the other skills by name.
+This package uses the common skill-directory structure plus `user-invocable: false` on the two internal skills. That extension preserves model invocation while hiding direct user invocation only in harnesses that honor it. `clarify-and-plan` leaves user and model invocation enabled and chains to the other skills by name.
 
 The specification recommends keeping `SKILL.md` below 500 lines and resolving resources relative to the skill root. The package's references are one level below each skill entry point.
 
 ## Standard installation
 
-The [Vercel `skills` CLI](https://github.com/vercel-labs/skills) accepts local paths and GitHub repositories. Install all eight skills; installing only `clarify-and-plan` leaves its named dependencies unavailable.
+The [Vercel `skills` CLI](https://github.com/vercel-labs/skills) accepts local paths and GitHub repositories. Install all three skills; installing only `clarify-and-plan` leaves its named dependencies unavailable.
 
 From a local checkout:
 
@@ -28,7 +28,7 @@ npx skills add OWNER/REPOSITORY --skill '*'
 
 Project installation is the default. Add `--global` for user scope or `--agent <agent>` to select a supported harness. The CLI installs discovered skill folders; it does not make this package an always-loaded instruction layer.
 
-The seven `user-invocable` fields are deliberate Claude-compatible extensions. Strict Agent Skills validators that accept only specification fields may reject those files even though the Vercel CLI installs them. Removing the fields restores strict frontmatter portability but also removes the only supported model-only visibility hint; it does not improve chaining.
+The two `user-invocable` fields are deliberate Claude-compatible extensions. Strict Agent Skills validators that accept only specification fields may reject those files even though the Vercel CLI installs them. Removing the fields restores strict frontmatter portability but also removes the only supported model-only visibility hint; it does not improve chaining.
 
 ## Codex
 
@@ -47,7 +47,7 @@ Sources: [Extend Claude with skills](https://code.claude.com/docs/en/slash-comma
 
 - Personal skills live in `~/.claude/skills/<name>/SKILL.md`; project skills live in `.claude/skills/<name>/SKILL.md`.
 - Claude may load a skill from its description, and a user can invoke the public entry point as `/clarify-and-plan`.
-- Claude Code supports `user-invocable: false` for skills intended only for model activation, so the seven internal skills can remain chainable without being user-facing commands.
+- Claude Code supports `user-invocable: false` for skills intended only for model activation, so the two internal skills can remain chainable without being user-facing commands.
 - `CLAUDE.md` is separate persistent context. Installing these skills does not create or edit one.
 
 ## Pi
@@ -58,7 +58,7 @@ Sources: [Pi README](https://github.com/earendil-works/pi/blob/main/packages/cod
 - Skills are exposed progressively and can be invoked with `/skill:name`, so the public entry point is `/skill:clarify-and-plan`.
 - Pi's documentation warns that a model may fail to load a relevant skill automatically.
 - `package.json` retains `pi.skills` so Pi can also load this repository as a native package.
-- Pi does not provide a portable guarantee for the `user-invocable` extension; the seven internal skills may still appear as direct commands.
+- Pi does not provide a portable guarantee for the `user-invocable` extension; the two internal skills may still appear as direct commands.
 
 ## OpenCode
 
@@ -72,4 +72,4 @@ Sources: [OpenCode Agent Skills](https://opencode.ai/docs/skills/), [OpenCode ru
 
 ## What “supports” means
 
-Support means the harness can discover all eight skill folders, start from `clarify-and-plan`, let the model load the internal dependencies, run repository commands, maintain relevant ADRs, and attempt Git/PR operations through available tools. It does not mean identical command syntax, skill visibility, model behavior, or permission policy. Internal chaining is instructional rather than mechanically enforced.
+Support means the harness can discover all three skill folders, start from `clarify-and-plan`, let the model load the internal dependencies, run repository commands, maintain relevant ADRs, and attempt Git/PR operations through available tools. It does not mean identical command syntax, skill visibility, model behavior, or permission policy. Internal chaining is instructional rather than mechanically enforced.

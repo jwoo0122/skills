@@ -9,17 +9,15 @@ decisions:
     applies_to:
       - adr/**
       - skills/maintain-architecture-decisions/**
-      - skills/workflow-router/**
       - skills/clarify-and-plan/**
-      - skills/review-change/**
+      - skills/execute-to-pr/**
     file: records/architecture/living-decisions.md
-    constrains:
-      - execution.adaptive-delegation
+    constrains: []
     depends_on:
       - interaction.material-ambiguity-loop
     supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-16'
+    last_reviewed: '2026-07-26'
     enforcement:
       - id: checker-implementation
         path: skills/maintain-architecture-decisions/scripts/adr.py
@@ -32,32 +30,22 @@ decisions:
           - scripts/adr check
     enforcement_exception: null
   - id: execution.adaptive-delegation
-    status: accepted
+    status: superseded
     scope: execution
     decision_type: workflow
     summary: Scale implementer delegation and independent verification to execution
       shape and risk.
     applies_to:
       - skills/execute-to-pr/**
-      - skills/review-change/**
-      - skills/coding-workflow-core/**
     file: records/execution/adaptive-delegation.md
     constrains: []
     depends_on:
       - architecture.living-decisions
-      - workflow.independent-facets
     supersedes: []
-    superseded_by: []
-    last_reviewed: '2026-07-15'
-    enforcement:
-      - id: implementation-gate
-        path: skills/execute-to-pr/SKILL.md
-        must_contain:
-          - Run the ADR conformance gate before review and delivery.
-      - id: independent-review-gate
-        path: skills/review-change/SKILL.md
-        must_contain:
-          - Run the ADR conformance gate
+    superseded_by:
+      - workflow.minimal-authority-boundary
+    last_reviewed: '2026-07-26'
+    enforcement: []
     enforcement_exception: null
   - id: interaction.material-ambiguity-loop
     status: accepted
@@ -67,54 +55,72 @@ decisions:
       the result.
     applies_to:
       - skills/clarify-and-plan/**
-      - skills/workflow-router/**
     file: records/interaction/material-ambiguity-loop.md
     constrains:
       - architecture.living-decisions
     depends_on:
-      - workflow.independent-facets
+      - workflow.minimal-authority-boundary
     supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-15'
+    last_reviewed: '2026-07-26'
     enforcement:
       - id: stopping-condition
         path: skills/clarify-and-plan/SKILL.md
         must_contain:
           - Repeat until no material ambiguity remains
-      - id: evidence-first-routing
-        path: skills/workflow-router/SKILL.md
+      - id: evidence-first-questioning
+        path: skills/clarify-and-plan/SKILL.md
         must_contain:
           - Ask only for unresolved material choices
     enforcement_exception: null
   - id: workflow.independent-facets
-    status: accepted
+    status: superseded
     scope: workflow
     decision_type: workflow
     summary: Route clarification, architecture, execution, and verification as independent
       facets.
     applies_to:
-      - skills/workflow-router/**
-      - skills/coding-workflow-core/**
+      - skills/clarify-and-plan/**
     file: records/workflow/independent-facets.md
-    constrains:
-      - interaction.material-ambiguity-loop
-      - execution.adaptive-delegation
+    constrains: []
     depends_on:
       - workflow.public-entrypoint
     supersedes: []
+    superseded_by:
+      - workflow.minimal-authority-boundary
+    last_reviewed: '2026-07-26'
+    enforcement: []
+    enforcement_exception: null
+  - id: workflow.minimal-authority-boundary
+    status: accepted
+    scope: workflow
+    decision_type: workflow
+    summary: Constrain the workflow with explicit authority boundaries instead of
+      a facet or delegation topology.
+    applies_to:
+      - skills/clarify-and-plan/**
+      - skills/execute-to-pr/**
+    file: records/workflow/minimal-authority-boundary.md
+    constrains:
+      - interaction.material-ambiguity-loop
+      - architecture.living-decisions
+    depends_on:
+      - workflow.public-entrypoint
+    supersedes:
+      - workflow.independent-facets
+      - execution.adaptive-delegation
     superseded_by: []
-    last_reviewed: '2026-07-15'
+    last_reviewed: '2026-07-26'
     enforcement:
-      - id: router-facets
-        path: skills/workflow-router/SKILL.md
-        must_contain:
-          - '| Clarification | `proceed`, `ask` |'
-          - '| Verification | `self`, `independent`, `multi-axis` |'
       - id: authority-mode
-        path: skills/coding-workflow-core/SKILL.md
+        path: skills/clarify-and-plan/SKILL.md
         must_contain:
           - 'mode: read-only | change'
           - 'delivery_boundary: answer | plan | local-change | commit | draft-pr'
+      - id: implementation-gate
+        path: skills/execute-to-pr/SKILL.md
+        must_contain:
+          - Run the ADR conformance gate before and after implementation.
     enforcement_exception: null
   - id: workflow.public-entrypoint
     status: accepted
@@ -127,19 +133,21 @@ decisions:
       - skills/*/agents/openai.yaml
     file: records/workflow/public-entrypoint.md
     constrains:
-      - workflow.independent-facets
+      - workflow.minimal-authority-boundary
       - interaction.material-ambiguity-loop
     depends_on: []
     supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-15'
+    last_reviewed: '2026-07-26'
     enforcement:
-      - id: router-entry
+      - id: sole-entry
         path: skills/clarify-and-plan/SKILL.md
         must_contain:
-          - activate `workflow-router`
+          - sole user-facing entry point
+          - Never ask the user to invoke another skill.
       - id: internal-metadata
-        path: skills/workflow-router/agents/openai.yaml
+        path: skills/*/agents/openai.yaml
         must_not_contain:
-          - $workflow-router
+          - $execute-to-pr
+          - $maintain-architecture-decisions
     enforcement_exception: null

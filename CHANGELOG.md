@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.0.0](https://github.com/jwoo0122/skills/compare/v1.0.1...v2.0.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* five skills are removed from the package. Installations that reference workflow-router, coding-workflow-core, diagnose-bug, evidence-research, or review-change by name must be reinstalled.
+
+### Features
+
+* enforce ADR source conformance ([#3](https://github.com/jwoo0122/skills/issues/3)) ([dbba364](https://github.com/jwoo0122/skills/commit/dbba364478671260c846a5318cd6076fa0ebd5d5))
+* reduce the workflow to clarification, ADR, and delivery ([#5](https://github.com/jwoo0122/skills/issues/5)) ([ecdb702](https://github.com/jwoo0122/skills/commit/ecdb702ef4bf7813a62af3d65c90b86fdd69d70f))
+
 ## [1.0.1](https://github.com/jwoo0122/skills/compare/v1.0.0...v1.0.1) (2026-07-16)
 
 

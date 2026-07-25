@@ -147,6 +147,7 @@ def check_scenarios() -> None:
         "bug-without-reproduction",
         "external-evidence-dependency",
         "local-only-delivery-boundary",
+        "adr-source-drift-gate",
     }
     assert required_ids <= set(ids), "critical forward-test cases are missing"
     for scenario in scenarios:
@@ -241,7 +242,7 @@ def check_release_automation() -> None:
     assert "googleapis/release-please-action@" in workflow
     assert "contents: write" in workflow
     assert "pull-requests: write" in workflow
-    assert f"## {package['version']}" in changelog
+    assert f"## [{package['version']}]" in changelog
 
 
 def main() -> None:

@@ -52,9 +52,12 @@ After editing records, rebuild and validate the index:
 ```sh
 <skill-root>/scripts/adr reindex --root <repository-root>
 <skill-root>/scripts/adr validate --root <repository-root>
+<skill-root>/scripts/adr check --root <repository-root>
 ```
 
-The launcher checks candidate Python interpreters by importing PyYAML, then runs the structural tool with the selected interpreter. It never installs packages. Set `ADR_PYTHON` to override discovery. The tool validates syntax, duplicate keys, IDs, status, paths, relationships, complete sections, and index freshness. Reindexing replaces the index atomically and can recover a missing index in a marked ADR system. It does not decide whether an intent is architecturally important.
+`validate` checks the ADR structure and index. `check` is the source-conformance gate: every accepted ADR MUST either declare at least one deterministic `enforcement` check or provide an `enforcement_exception` with a status, reason, evidence, and revisit conditions. For checks, the command reads repository-relative target files and enforces exact `must_contain` and `must_not_contain` assertions. Run it once against the pre-change baseline and again after implementation. A failing check blocks delivery; it is evidence of either an implementation violation, stale ADR intent, or an undocumented exception that must be reconciled. These checks are intentionally explicit and mechanical; they do not claim to prove the meaning of unconstrained natural-language prose.
+
+The launcher checks candidate Python interpreters by importing PyYAML, then runs the structural and enforcement tool with the selected interpreter. It never installs packages. Set `ADR_PYTHON` to override discovery. The tool validates syntax, duplicate keys, IDs, status, paths, relationships, complete sections, enforcement declarations, and index freshness. Reindexing replaces the index atomically and can recover a missing index in a marked ADR system. It does not decide whether an intent is architecturally important or prove unconstrained natural-language semantics.
 
 ## Hand off
 

@@ -163,6 +163,107 @@ class AdrToolTests(unittest.TestCase):
         result = self.run_cli("validate", ROOT)
         self.assertIn("validate: ok (5 records)", result.stdout)
 
+    def test_dogfood_enforcement_checks_pass(self) -> None:
+        result = self.run_cli("check", ROOT)
+        self.assertIn("check: ok (10 enforcement checks)", result.stdout)
+
+    def test_enforcement_detects_source_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.copy_dogfood(root)
+            shutil.copytree(ROOT / "skills", root / "skills")
+            source = root / "skills" / "clarify-and-plan" / "SKILL.md"
+            source.write_text(
+                source.read_text(encoding="utf-8").replace(
+                    "activate `workflow-router`", "activate the router", 1
+                ),
+                encoding="utf-8",
+            )
+            result = self.run_cli("check", root, expected=1)
+            self.assertIn("enforcement failed", result.stderr)
+            self.assertIn("workflow.public-entrypoint/router-entry", result.stderr)
+
+    def test_enforcement_detects_forbidden_source_text(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.copy_dogfood(root)
+            shutil.copytree(ROOT / "skills", root / "skills")
+            source = root / "skills" / "workflow-router" / "agents" / "openai.yaml"
+            source.write_text(source.read_text(encoding="utf-8") + "\n$workflow-router\n", encoding="utf-8")
+            result = self.run_cli("check", root, expected=1)
+            self.assertIn("forbids", result.stderr)
+            self.assertIn("workflow.public-entrypoint/internal-metadata", result.stderr)
+
+    def test_enforcement_exception_allows_explicit_manual_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.copy_dogfood(root)
+            shutil.copytree(ROOT / "skills", root / "skills")
+            record = root / "adr" / "records" / "workflow" / "public-entrypoint.md"
+            text = record.read_text(encoding="utf-8")
+            start = text.index("enforcement:\n")
+            end = text.index("---\n", start)
+            exception = (
+                "enforcement: []\n"
+                "enforcement_exception:\n"
+                "  status: manual\n"
+                "  reason: The harness exposes internal skill visibility outside repository text.\n"
+                "  evidence:\n"
+                "    - tests/test_package.py::check_skills\n"
+                "  revisit_when:\n"
+                "    - The Agent Skills specification defines private composition.\n"
+            )
+            record.write_text(text[:start] + exception + text[end:], encoding="utf-8")
+            self.run_cli("reindex", root)
+            result = self.run_cli("check", root)
+            self.assertIn("8 enforcement checks, 1 declared exception", result.stdout)
+
+    def test_enforcement_requires_nonempty_checks_for_accepted_records(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.copy_dogfood(root)
+            shutil.copytree(ROOT / "skills", root / "skills")
+            record = root / "adr" / "records" / "workflow" / "public-entrypoint.md"
+            text = record.read_text(encoding="utf-8")
+            start = text.index("enforcement:\n")
+            end = text.index("---\n", start)
+            record.write_text(text[:start] + "enforcement: []\n" + text[end:], encoding="utf-8")
+            self.run_cli("reindex", root)
+            result = self.run_cli("check", root, expected=1)
+            self.assertIn("no enforcement checks or declared exception", result.stderr)
+
+    def test_enforcement_rejects_stale_index(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.copy_dogfood(root)
+            record = root / "adr" / "records" / "workflow" / "public-entrypoint.md"
+            record.write_text(
+                record.read_text(encoding="utf-8").replace(
+                    "clarify-and-plan is the sole user-facing entry point",
+                    "clarify-and-plan remains the sole user-facing entry point",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            result = self.run_cli("check", root, expected=1)
+            self.assertIn("stale index", result.stderr)
+
+    def test_enforcement_rejects_missing_target(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.copy_dogfood(root)
+            shutil.copytree(ROOT / "skills", root / "skills")
+            record = root / "adr" / "records" / "workflow" / "public-entrypoint.md"
+            record.write_text(
+                record.read_text(encoding="utf-8").replace(
+                    "skills/clarify-and-plan/SKILL.md", "skills/missing/SKILL.md", 1
+                ),
+                encoding="utf-8",
+            )
+            self.run_cli("reindex", root)
+            result = self.run_cli("check", root, expected=1)
+            self.assertIn("matched no files", result.stderr)
+
     def test_init_is_non_destructive_and_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -533,6 +634,7 @@ class AdrToolTests(unittest.TestCase):
                     "supersedes": supersedes,
                     "superseded_by": superseded_by,
                     "last_reviewed": "2026-07-15",
+                    "enforcement": [],
                 }
                 path = root / "adr" / "records" / Path(*decision_id.split(".")).with_suffix(".md")
                 path.parent.mkdir(parents=True, exist_ok=True)

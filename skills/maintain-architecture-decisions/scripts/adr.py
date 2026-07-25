@@ -24,9 +24,10 @@ except ImportError:
 
 
 STATUSES = {"proposed", "accepted", "superseded", "retired"}
+ENFORCEMENT_EXCEPTION_STATUSES = {"manual", "not-applicable", "deferred"}
 SYSTEM_MARKER = ".adr-system.yaml"
 SYSTEM_NAME = "maintain-architecture-decisions"
-SYSTEM_VERSION = 1
+SYSTEM_VERSION = 2
 RELATION_FIELDS = ("constrains", "depends_on", "supersedes", "superseded_by")
 REQUIRED_FIELDS = (
     "id",
@@ -37,6 +38,7 @@ REQUIRED_FIELDS = (
     "summary",
     *RELATION_FIELDS,
     "last_reviewed",
+    "enforcement",
 )
 REQUIRED_SECTIONS = (
     "Decision question",
@@ -60,6 +62,7 @@ TEMPLATE_PLACEHOLDERS = (
     "List observable conditions that justify reopening the decision.",
 )
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$")
+ENFORCEMENT_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
 SCOPE_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -278,6 +281,69 @@ def parse_record(path: Path, adr_root: Path) -> dict[str, Any]:
         if decision_id in value:
             raise AdrError(f"{field} cannot reference the record itself in {path}")
 
+    enforcement = data["enforcement"]
+    if not isinstance(enforcement, list):
+        raise AdrError(f"enforcement must be a list in {path}")
+    enforcement_ids: set[str] = set()
+    for check in enforcement:
+        if not isinstance(check, dict):
+            raise AdrError(f"each enforcement check must be a mapping in {path}")
+        if set(check) - {"id", "path", "must_contain", "must_not_contain"}:
+            unexpected = sorted(set(check) - {"id", "path", "must_contain", "must_not_contain"})
+            raise AdrError(f"unknown enforcement fields in {path}: {', '.join(unexpected)}")
+        check_id = check.get("id")
+        if not isinstance(check_id, str) or not ENFORCEMENT_ID_PATTERN.fullmatch(check_id):
+            raise AdrError(f"invalid enforcement check id in {path}: {check_id!r}")
+        if check_id in enforcement_ids:
+            raise AdrError(f"duplicate enforcement check id in {path}: {check_id}")
+        enforcement_ids.add(check_id)
+        target = check.get("path")
+        if not isinstance(target, str) or not target.strip() or "\x00" in target:
+            raise AdrError(f"enforcement path must be a non-empty string in {path}")
+        target_path = Path(target)
+        if target_path.is_absolute() or ".." in target_path.parts:
+            raise AdrError(f"enforcement path must stay inside the repository in {path}: {target!r}")
+        for field in ("must_contain", "must_not_contain"):
+            assertions = check.get(field, [])
+            if not isinstance(assertions, list) or not all(
+                isinstance(item, str) and item for item in assertions
+            ):
+                raise AdrError(f"{field} must be a string list in enforcement check {check_id} of {path}")
+            if len(assertions) != len(set(assertions)):
+                raise AdrError(f"{field} contains duplicates in enforcement check {check_id} of {path}")
+        if not check.get("must_contain") and not check.get("must_not_contain"):
+            raise AdrError(f"enforcement check has no assertions in {path}: {check_id}")
+        overlap = set(check.get("must_contain", [])) & set(check.get("must_not_contain", []))
+        if overlap:
+            raise AdrError(f"enforcement check asserts both presence and absence in {path}: {check_id}")
+
+    exception = data.get("enforcement_exception")
+    if exception is not None:
+        if not isinstance(exception, dict):
+            raise AdrError(f"enforcement_exception must be a mapping or null in {path}")
+        allowed_exception_fields = {"status", "reason", "evidence", "revisit_when"}
+        unexpected = set(exception) - allowed_exception_fields
+        if unexpected:
+            raise AdrError(
+                f"unknown enforcement_exception fields in {path}: {', '.join(sorted(unexpected))}"
+            )
+        exception_status = exception.get("status")
+        if exception_status not in ENFORCEMENT_EXCEPTION_STATUSES:
+            raise AdrError(
+                f"invalid enforcement_exception status in {path}: {exception_status!r}"
+            )
+        if not isinstance(exception.get("reason"), str) or not exception["reason"].strip():
+            raise AdrError(f"enforcement_exception reason must be non-empty in {path}")
+        for field in ("evidence", "revisit_when"):
+            values = exception.get(field)
+            if not isinstance(values, list) or not all(
+                isinstance(item, str) and item.strip() for item in values
+            ):
+                raise AdrError(
+                    f"enforcement_exception {field} must be a non-empty string list in {path}"
+                )
+    data["enforcement_exception"] = exception
+
     reviewed = data["last_reviewed"]
     if isinstance(reviewed, date):
         reviewed = reviewed.isoformat()
@@ -416,6 +482,8 @@ def build_index(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
                 "supersedes": record["supersedes"],
                 "superseded_by": record["superseded_by"],
                 "last_reviewed": record["last_reviewed"],
+                "enforcement": record["enforcement"],
+                "enforcement_exception": record["enforcement_exception"],
             }
         )
     return {
@@ -461,10 +529,78 @@ def validate_repository(root: Path) -> None:
     print(f"validate: ok ({len(records)} records)")
 
 
+def enforce_repository(root: Path) -> None:
+    resolved_root = root.resolve()
+    adr_root, records, expected_index = records_and_index(resolved_root)
+    actual_index = load_yaml(adr_root / "index.yaml")
+    if actual_index != expected_index:
+        raise AdrError(f"stale index: run reindex for {adr_root / 'index.yaml'}")
+    total_checks = 0
+    total_exceptions = 0
+    for decision_id, record in sorted(records.items()):
+        if record["status"] != "accepted":
+            continue
+        checks = record["enforcement"]
+        exception = record["enforcement_exception"]
+        if not checks:
+            if exception is None:
+                raise AdrError(f"accepted ADR has no enforcement checks or declared exception: {decision_id}")
+            total_exceptions += 1
+            continue
+        if exception is not None:
+            raise AdrError(
+                f"ADR cannot declare both enforcement checks and an exception: {decision_id}"
+            )
+        for check in checks:
+            total_checks += 1
+            target = check["path"]
+            matches = sorted(resolved_root.glob(target))
+            files = []
+            for match in matches:
+                if match.is_symlink():
+                    raise AdrError(
+                        f"enforcement target is a symlink: {decision_id}/{check['id']}: {match}"
+                    )
+                if match.is_file():
+                    try:
+                        match.resolve().relative_to(resolved_root)
+                    except ValueError as error:
+                        raise AdrError(
+                            f"enforcement target escapes repository: {decision_id}/{check['id']}: {match}"
+                        ) from error
+                    files.append(match)
+            if not files:
+                raise AdrError(
+                    f"enforcement target matched no files: {decision_id}/{check['id']}: {target}"
+                )
+            for path in files:
+                try:
+                    content = path.read_text(encoding="utf-8")
+                except UnicodeDecodeError as error:
+                    raise AdrError(
+                        f"enforcement target is not UTF-8 text: {decision_id}/{check['id']}: {path}"
+                    ) from error
+                for expected in check.get("must_contain", []):
+                    if expected not in content:
+                        raise AdrError(
+                            f"enforcement failed: {decision_id}/{check['id']} requires {expected!r} in {path}"
+                        )
+                for forbidden in check.get("must_not_contain", []):
+                    if forbidden in content:
+                        raise AdrError(
+                            f"enforcement failed: {decision_id}/{check['id']} forbids {forbidden!r} in {path}"
+                        )
+    if total_exceptions:
+        label = "exception" if total_exceptions == 1 else "exceptions"
+        suffix = f", {total_exceptions} declared {label}"
+    else:
+        suffix = ""
+    print(f"check: ok ({total_checks} enforcement checks{suffix})")
+
 def parser() -> argparse.ArgumentParser:
     command_parser = argparse.ArgumentParser(description=__doc__)
     subcommands = command_parser.add_subparsers(dest="command", required=True)
-    for name in ("init", "reindex", "validate"):
+    for name in ("init", "reindex", "validate", "check"):
         subcommand = subcommands.add_parser(name)
         subcommand.add_argument("--root", type=Path, default=Path.cwd())
     return command_parser
@@ -477,8 +613,10 @@ def main() -> int:
             init_repository(args.root)
         elif args.command == "reindex":
             reindex_repository(args.root)
-        else:
+        elif args.command == "validate":
             validate_repository(args.root)
+        else:
+            enforce_repository(args.root)
     except AdrError as error:
         print(f"adr error: {error}", file=sys.stderr)
         return 1

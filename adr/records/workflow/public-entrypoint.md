@@ -14,6 +14,15 @@ depends_on: []
 supersedes: []
 superseded_by: []
 last_reviewed: "2026-07-15"
+enforcement:
+  - id: router-entry
+    path: skills/clarify-and-plan/SKILL.md
+    must_contain:
+      - "activate `workflow-router`"
+  - id: internal-metadata
+    path: skills/workflow-router/agents/openai.yaml
+    must_not_contain:
+      - "$workflow-router"
 ---
 
 # Sole public workflow entry point

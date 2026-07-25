@@ -117,11 +117,14 @@ The maintenance tool supports:
 skills/maintain-architecture-decisions/scripts/adr init
 skills/maintain-architecture-decisions/scripts/adr reindex
 skills/maintain-architecture-decisions/scripts/adr validate
+skills/maintain-architecture-decisions/scripts/adr check
 ```
 
 ## Why I think this structure fits the purpose
 
 I want the user to provide the first requirement and then let the agent carry the workflow. A small, obvious change should stay small. A vague or consequential change should trigger a real design conversation, similar to a grilling session, until the choices that materially change the result are resolved.
+
+Accepted ADRs may declare repository-relative `enforcement` checks (`must_contain` and `must_not_contain`). When static enforcement is inappropriate, they may declare an explicit `enforcement_exception` with a status, reason, evidence, and revisit conditions. The `adr check` command reads declared targets and fails mechanically on source drift or undocumented exceptions. This is a deterministic conformance gate for explicit assertions, not a semantic proof of every natural-language statement; use tests, parsers, and independent review for the remaining behavior.
 
 The durable output of that conversation should not be a linear pile of decision logs. It should be structured architectural intent: the reasons, boundaries, invariants, and trade-offs that future agents cannot reliably reconstruct by scanning code. That intent must remain open to correction, contradiction, and reversal as evidence changes. Used this way, ADRs reduce the variance between models by narrowing how much hidden intent each model has to guess.
 
@@ -139,7 +142,7 @@ Run the package checks:
 ./scripts/check.sh
 ```
 
-They validate skill metadata and visibility intent, required resources, the forward-test catalog schema, ADR structure and index consistency, removal of obsolete installation paths, and standard installation documentation. They do not execute an LLM or prove behavioral compliance. The scenario catalog is intended for independent forward tests across models, where success is judged by preserved intent and safety rather than identical wording, question counts, or agent counts.
+They validate skill metadata and visibility intent, required resources, the forward-test catalog schema, ADR structure and index consistency, ADR-to-source enforcement checks, removal of obsolete installation paths, and standard installation documentation. They do not execute an LLM or prove behavioral compliance beyond the declared mechanical checks. The scenario catalog is intended for independent forward tests across models, where success is judged by preserved intent and safety rather than identical wording, question counts, or agent counts.
 
 ## Releases
 

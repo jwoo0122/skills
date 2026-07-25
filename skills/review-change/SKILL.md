@@ -12,6 +12,7 @@ When assigned one review axis, perform only that pass and do not infer the other
 
 ## Start from fresh evidence
 
+- Run the ADR conformance gate when the repository has `adr/`; report a failing gate as an architecture or verification finding rather than treating it as a soft warning.
 - Read repository instructions, the user brief, acceptance checks, relevant ADRs, the base state, the complete task diff, and verification output.
 - Do not rely on the implementer's explanation, suspected weak spots, or self-review as proof.
 - Separate task-owned changes from unrelated pre-existing work. Review only the requested scope, but report an overlap that prevents reliable attribution.

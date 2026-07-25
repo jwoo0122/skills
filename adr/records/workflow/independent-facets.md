@@ -15,6 +15,17 @@ depends_on:
 supersedes: []
 superseded_by: []
 last_reviewed: "2026-07-15"
+enforcement:
+  - id: router-facets
+    path: skills/workflow-router/SKILL.md
+    must_contain:
+      - "| Clarification | `proceed`, `ask` |"
+      - "| Verification | `self`, `independent`, `multi-axis` |"
+  - id: authority-mode
+    path: skills/coding-workflow-core/SKILL.md
+    must_contain:
+      - "mode: read-only | change"
+      - "delivery_boundary: answer | plan | local-change | commit | draft-pr"
 ---
 
 # Independent workflow facets

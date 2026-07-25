@@ -14,6 +14,15 @@ depends_on:
 supersedes: []
 superseded_by: []
 last_reviewed: "2026-07-15"
+enforcement:
+  - id: stopping-condition
+    path: skills/clarify-and-plan/SKILL.md
+    must_contain:
+      - "Repeat until no material ambiguity remains"
+  - id: evidence-first-routing
+    path: skills/workflow-router/SKILL.md
+    must_contain:
+      - "Ask only for unresolved material choices"
 ---
 
 # Material ambiguity interview loop

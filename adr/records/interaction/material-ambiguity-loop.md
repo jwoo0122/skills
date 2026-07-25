@@ -5,22 +5,21 @@ scope: interaction
 decision_type: interaction
 applies_to:
   - skills/clarify-and-plan/**
-  - skills/workflow-router/**
 summary: "Iterate clarification until no unresolved ambiguity can materially change the result."
 constrains:
   - architecture.living-decisions
 depends_on:
-  - workflow.independent-facets
+  - workflow.minimal-authority-boundary
 supersedes: []
 superseded_by: []
-last_reviewed: "2026-07-15"
+last_reviewed: "2026-07-26"
 enforcement:
   - id: stopping-condition
     path: skills/clarify-and-plan/SKILL.md
     must_contain:
       - "Repeat until no material ambiguity remains"
-  - id: evidence-first-routing
-    path: skills/workflow-router/SKILL.md
+  - id: evidence-first-questioning
+    path: skills/clarify-and-plan/SKILL.md
     must_contain:
       - "Ask only for unresolved material choices"
 ---
@@ -41,6 +40,7 @@ Premature implementation silently chooses product intent. Conversely, asking abo
 
 ## Invariants
 
+- The clarification judgment is `proceed` or `ask`, decided by unresolved material ambiguity rather than request size.
 - Repository facts and accepted ADRs are investigated before asking the user.
 - Dependent questions are asked after their prerequisites; independent high-value questions may be grouped.
 - Vague or contradictory answers are narrowed rather than silently interpreted.

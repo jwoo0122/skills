@@ -9,22 +9,12 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_SKILLS = {
-    "coding-workflow-core",
-    "workflow-router",
     "clarify-and-plan",
     "execute-to-pr",
-    "diagnose-bug",
-    "evidence-research",
-    "review-change",
     "maintain-architecture-decisions",
 }
 INTERNAL_SKILLS = {
-    "coding-workflow-core",
-    "workflow-router",
     "execute-to-pr",
-    "diagnose-bug",
-    "evidence-research",
-    "review-change",
     "maintain-architecture-decisions",
 }
 
@@ -127,10 +117,10 @@ def check_scenarios() -> None:
     ids = [scenario["id"] for scenario in scenarios]
     assert len(ids) == len(set(ids)), "duplicate scenario id"
     allowed = {
+        "mode": {"read-only", "change"},
         "clarification": {"proceed", "ask"},
         "adr": {"none", "reference", "reconcile"},
-        "execution": {"none", "direct", "delegate", "decompose"},
-        "verification": {"self", "independent", "multi-axis"},
+        "delivery_boundary": {"answer", "plan", "local-change", "commit", "draft-pr"},
     }
     required_ids = {
         "read-only-diagnosis",
@@ -145,7 +135,6 @@ def check_scenarios() -> None:
         "improve-stale-adr-scope",
         "midstream-adr-conflict",
         "bug-without-reproduction",
-        "external-evidence-dependency",
         "local-only-delivery-boundary",
         "adr-source-drift-gate",
     }
@@ -181,7 +170,7 @@ def check_required_resources() -> None:
     required = (
         "skills/clarify-and-plan/references/grilling-loop.md",
         "skills/execute-to-pr/references/implementation-loop.md",
-        "skills/execute-to-pr/references/work-packets.md",
+        "skills/execute-to-pr/references/git-and-pr-guardrails.md",
         "skills/maintain-architecture-decisions/references/decision-policy.md",
         "skills/maintain-architecture-decisions/assets/adr-readme.md",
         "skills/maintain-architecture-decisions/assets/record-template.md",
@@ -200,10 +189,9 @@ def check_required_resources() -> None:
     indexed_ids = {decision["id"] for decision in index["decisions"]}
     required_ids = {
         "workflow.public-entrypoint",
-        "workflow.independent-facets",
+        "workflow.minimal-authority-boundary",
         "interaction.material-ambiguity-loop",
         "architecture.living-decisions",
-        "execution.adaptive-delegation",
     }
     assert required_ids <= indexed_ids, "accepted workflow decisions are missing from the ADR map"
 
@@ -214,7 +202,7 @@ def check_install_documentation() -> None:
         text = (ROOT / relative).read_text()
         assert command.format(source=".") in text, f"missing local skills CLI command in {relative}"
         assert command.format(source="OWNER/REPOSITORY") in text, f"missing GitHub skills CLI command in {relative}"
-        assert "all eight" in text.lower(), f"all eight skills are not required in {relative}"
+        assert "all three" in text.lower(), f"all three skills are not required in {relative}"
         assert "install.sh" not in text, f"custom installer remains documented in {relative}"
         assert "adapters/" not in text, f"legacy adapters remain documented in {relative}"
         assert "bootstrap" not in text.lower(), f"legacy bootstrap remains documented in {relative}"

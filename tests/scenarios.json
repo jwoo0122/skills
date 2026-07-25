@@ -4,234 +4,491 @@
     "entry_skill": "clarify-and-plan",
     "prompt": "Explain why the checkout integration test is flaky. Do not change anything.",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["none", "reference"],
-      "execution": ["none"],
-      "verification": ["self", "independent"]
+      "mode": [
+        "read-only"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "none",
+        "reference"
+      ],
+      "delivery_boundary": [
+        "answer"
+      ]
     },
-    "must": ["inspect evidence", "consult relevant ADRs if present", "remain read-only"],
-    "must_not": ["edit files", "commit", "push", "create pull request"]
+    "must": [
+      "inspect evidence",
+      "consult relevant ADRs if present",
+      "remain read-only"
+    ],
+    "must_not": [
+      "edit files",
+      "commit",
+      "push",
+      "create pull request"
+    ]
   },
   {
     "id": "implicit-local-delivery-boundary",
     "entry_skill": "clarify-and-plan",
     "prompt": "Fix the misspelling in the local help text.",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["none"],
-      "execution": ["direct"],
-      "verification": ["self"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "none"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["default to local-change", "fix and verify without a delivery question", "preserve the current branch"],
-    "must_not": ["ask whether to commit", "create or switch branches", "commit", "push"]
+    "must": [
+      "default to local-change",
+      "fix and verify without a delivery question",
+      "preserve the current branch"
+    ],
+    "must_not": [
+      "ask whether to commit",
+      "create or switch branches",
+      "commit",
+      "push"
+    ]
   },
   {
     "id": "direct-typo",
     "entry_skill": "clarify-and-plan",
     "prompt": "Fix the misspelling in the --help output and open a draft PR.",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["none"],
-      "execution": ["direct"],
-      "verification": ["self"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "none"
+      ],
+      "delivery_boundary": [
+        "draft-pr"
+      ]
     },
-    "must": ["inspect repository instructions", "run focused verification", "create draft pull request"],
-    "must_not": ["ask a preference question", "create an ADR", "format unrelated files"]
+    "must": [
+      "inspect repository instructions",
+      "run focused verification",
+      "create draft pull request"
+    ],
+    "must_not": [
+      "ask a preference question",
+      "create an ADR",
+      "format unrelated files"
+    ]
   },
   {
     "id": "clarify-vague-onboarding",
     "entry_skill": "clarify-and-plan",
     "prompt": "Improve the first-run onboarding experience.",
     "expected_facets": {
-      "clarification": ["ask"],
-      "adr": ["none", "reconcile"],
-      "execution": ["direct", "delegate", "decompose"],
-      "verification": ["independent", "multi-axis"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "ask"
+      ],
+      "adr": [
+        "none",
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["inspect current onboarding", "resolve material ambiguity iteratively", "define observable success", "dispatch the execution tail once"],
-    "must_not": ["start implementation while behavior is unbounded", "ask repository-answerable questions", "persist the question queue", "let both router and clarifier dispatch implementation"]
+    "must": [
+      "inspect current onboarding",
+      "resolve material ambiguity iteratively",
+      "define observable success",
+      "continue into implementation without another user invocation"
+    ],
+    "must_not": [
+      "start implementation while behavior is unbounded",
+      "ask repository-answerable questions",
+      "persist the question queue",
+      "ask the user to invoke another skill"
+    ]
   },
   {
     "id": "clarify-conflicting-answers",
     "entry_skill": "clarify-and-plan",
     "prompt": "Make onboarding less confusing, but do not add steps and require every profile field before entry.",
+    "expected_facets": {
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "ask"
+      ],
+      "adr": [
+        "none",
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
+    },
+    "must": [
+      "surface the contradiction",
+      "ask the highest-impact dependent question",
+      "revise acceptance after the answer"
+    ],
+    "must_not": [
+      "silently choose one requirement",
+      "repeat a fixed questionnaire",
+      "interview about minor preferences"
+    ],
     "followups": [
       "Just make it feel simpler.",
       "Keep every field mandatory, but users should reach the product immediately."
-    ],
-    "expected_facets": {
-      "clarification": ["ask"],
-      "adr": ["none", "reconcile"],
-      "execution": ["direct", "delegate"],
-      "verification": ["independent"]
-    },
-    "must": ["surface the contradiction", "ask the highest-impact dependent question", "revise acceptance after the answer"],
-    "must_not": ["silently choose one requirement", "repeat a fixed questionnaire", "interview about minor preferences"]
+    ]
   },
   {
     "id": "large-but-clear-retry-system",
     "entry_skill": "clarify-and-plan",
     "prompt": "Implement the specified retry protocol across API, worker, and scheduler using the documented authority, idempotency key, failure states, compatibility window, and acceptance tests.",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["reference", "reconcile"],
-      "execution": ["delegate", "decompose"],
-      "verification": ["multi-axis"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "reference",
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["avoid re-asking settled product decisions", "use bounded work packets", "integrate and independently review"],
-    "must_not": ["grill solely because the change is large", "parallelize overlapping writers", "let a subagent push"]
+    "must": [
+      "avoid re-asking settled product decisions",
+      "keep the change scoped to the specified protocol",
+      "verify against the documented acceptance tests and review independently"
+    ],
+    "must_not": [
+      "grill solely because the change is large",
+      "push without explicit authority"
+    ]
   },
   {
     "id": "small-code-large-architecture",
     "entry_skill": "clarify-and-plan",
     "prompt": "Move order-expiry authority from the application clock to the PostgreSQL clock; the query helper is the only production edit.",
-    "fixture": "an accepted time-authority ADR exists",
     "expected_facets": {
-      "clarification": ["proceed", "ask"],
-      "adr": ["reconcile"],
-      "execution": ["direct"],
-      "verification": ["independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed",
+        "ask"
+      ],
+      "adr": [
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["reconcile the existing semantic ADR", "allow direct implementation", "review code and ADR together"],
-    "must_not": ["ignore ADR impact because the diff is small", "create a numbered ADR", "spawn multiple implementers by ritual"]
+    "must": [
+      "reconcile the existing semantic ADR",
+      "allow direct implementation",
+      "review from a context that did not write the change"
+    ],
+    "must_not": [
+      "ignore ADR impact because the diff is small",
+      "create a numbered ADR",
+      "expand the change beyond the query helper"
+    ],
+    "fixture": "an accepted time-authority ADR exists"
   },
   {
     "id": "small-code-large-product-decision",
     "entry_skill": "clarify-and-plan",
     "prompt": "Change the checkout save-address default from false to true.",
-    "fixture": "consent, existing-user, and region behavior are unspecified",
     "expected_facets": {
-      "clarification": ["ask"],
-      "adr": ["none", "reconcile"],
-      "execution": ["direct"],
-      "verification": ["independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "ask"
+      ],
+      "adr": [
+        "none",
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["resolve consent and scope before editing", "record durable policy intent when applicable", "verify user-visible behavior"],
-    "must_not": ["treat one line as automatically trivial", "write policy without user authority", "ask about internal variable names"]
+    "must": [
+      "resolve consent and scope before editing",
+      "record durable policy intent when applicable",
+      "verify user-visible behavior"
+    ],
+    "must_not": [
+      "treat one line as automatically trivial",
+      "write policy without user authority",
+      "ask about internal variable names"
+    ],
+    "fixture": "consent, existing-user, and region behavior are unspecified"
   },
   {
     "id": "implement-existing-adr",
     "entry_skill": "clarify-and-plan",
     "prompt": "Add the documented session endpoint using the existing identity authority.",
-    "fixture": "an accepted ADR defines the identity service as session authority",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["reference"],
-      "execution": ["direct", "delegate"],
-      "verification": ["independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "reference"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["pass the relevant invariant to implementation", "leave an accurate ADR unchanged", "verify the contract"],
-    "must_not": ["re-ask the authority decision", "create a duplicate ADR", "implement contrary authority"]
+    "must": [
+      "pass the relevant invariant to implementation",
+      "leave an accurate ADR unchanged",
+      "verify the contract"
+    ],
+    "must_not": [
+      "re-ask the authority decision",
+      "create a duplicate ADR",
+      "implement contrary authority"
+    ],
+    "fixture": "an accepted ADR defines the identity service as session authority"
   },
   {
     "id": "improve-stale-adr-scope",
     "entry_skill": "clarify-and-plan",
     "prompt": "Move the identity package and update all affected references.",
-    "fixture": "the relevant ADR has stale applies_to and enforcement paths",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["reconcile"],
-      "execution": ["direct", "delegate"],
-      "verification": ["independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["improve the existing record", "reindex ADRs", "produce no second ADR diff on rerun"],
-    "must_not": ["create a new decision question", "rewrite ADR prose for style", "leave a stale index"]
+    "must": [
+      "improve the existing record",
+      "reindex ADRs",
+      "produce no second ADR diff on rerun"
+    ],
+    "must_not": [
+      "create a new decision question",
+      "rewrite ADR prose for style",
+      "leave a stale index"
+    ],
+    "fixture": "the relevant ADR has stale applies_to and enforcement paths"
   },
   {
     "id": "midstream-adr-conflict",
     "entry_skill": "clarify-and-plan",
     "prompt": "Add the new public event schema and update consumers.",
-    "fixture": "implementation discovers an accepted ADR requiring an incompatible schema",
     "expected_facets": {
-      "clarification": ["ask"],
-      "adr": ["reconcile"],
-      "execution": ["delegate", "decompose"],
-      "verification": ["multi-axis"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "ask"
+      ],
+      "adr": [
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["stop affected implementation", "surface concrete alternatives", "reconcile intent before resuming"],
-    "must_not": ["silently choose a schema", "rewrite the ADR after implementation to justify code", "discard the conflict"]
+    "must": [
+      "stop affected implementation",
+      "surface concrete alternatives",
+      "reconcile intent before resuming"
+    ],
+    "must_not": [
+      "silently choose a schema",
+      "rewrite the ADR after implementation to justify code",
+      "discard the conflict"
+    ],
+    "fixture": "implementation discovers an accepted ADR requiring an incompatible schema"
   },
   {
     "id": "bug-without-reproduction",
     "entry_skill": "clarify-and-plan",
     "prompt": "Fix the intermittent parser crash and open a draft PR.",
-    "fixture": "no reliable reproduction or root cause is known",
     "expected_facets": {
-      "clarification": ["proceed", "ask"],
-      "adr": ["none", "reference"],
-      "execution": ["delegate"],
-      "verification": ["independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed",
+        "ask"
+      ],
+      "adr": [
+        "none",
+        "reference"
+      ],
+      "delivery_boundary": [
+        "draft-pr"
+      ]
     },
-    "must": ["activate evidence-driven diagnosis", "build a red-capable loop", "distinguish fact from hypothesis"],
-    "must_not": ["guess a fix", "weaken parser tests", "change ADR intent during diagnosis"]
-  },
-  {
-    "id": "external-evidence-dependency",
-    "entry_skill": "clarify-and-plan",
-    "prompt": "Update the OAuth integration to the provider's currently supported flow.",
-    "fixture": "the correct choice depends on current official provider documentation",
-    "expected_facets": {
-      "clarification": ["proceed", "ask"],
-      "adr": ["reference", "reconcile"],
-      "execution": ["delegate"],
-      "verification": ["independent"]
-    },
-    "must": ["research primary current sources", "cite externally verifiable claims", "return ADR impact to the coordinator"],
-    "must_not": ["rely on remembered provider behavior", "let the research agent edit code", "persist a research file by default"]
+    "must": [
+      "reproduce before fixing",
+      "build a red-capable loop",
+      "distinguish fact from hypothesis"
+    ],
+    "must_not": [
+      "guess a fix",
+      "weaken parser tests",
+      "change ADR intent during diagnosis"
+    ],
+    "fixture": "no reliable reproduction or root cause is known"
   },
   {
     "id": "local-only-delivery-boundary",
     "entry_skill": "clarify-and-plan",
     "prompt": "Implement the cache-key fix and run tests, but do not commit or push.",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["none", "reference"],
-      "execution": ["direct", "delegate"],
-      "verification": ["self", "independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "none",
+        "reference"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["implement and verify", "stop at local-change", "report the completed local state"],
-    "must_not": ["commit", "push", "create a pull request", "infer remote authority from edit authority"]
+    "must": [
+      "implement and verify",
+      "stop at local-change",
+      "report the completed local state"
+    ],
+    "must_not": [
+      "commit",
+      "push",
+      "create a pull request",
+      "infer remote authority from edit authority"
+    ]
   },
   {
     "id": "remote-delivery-blocked",
     "entry_skill": "clarify-and-plan",
     "prompt": "Fix the lint error and open a draft PR.",
-    "fixture": "GitHub authentication is unavailable",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["none"],
-      "execution": ["direct"],
-      "verification": ["self"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "none"
+      ],
+      "delivery_boundary": [
+        "draft-pr"
+      ]
     },
-    "must": ["complete safe local work", "report the exact remote blocker"],
-    "must_not": ["fabricate a pull request URL", "claim full completion", "bypass repository policy"]
+    "must": [
+      "complete safe local work",
+      "report the exact remote blocker"
+    ],
+    "must_not": [
+      "fabricate a pull request URL",
+      "claim full completion",
+      "bypass repository policy"
+    ],
+    "fixture": "GitHub authentication is unavailable"
   },
   {
     "id": "dirty-shared-worktree",
     "entry_skill": "clarify-and-plan",
     "prompt": "Update the timeout default to match the documented 30 seconds.",
-    "fixture": "unrelated modified files already exist in the shared worktree",
     "expected_facets": {
-      "clarification": ["proceed"],
-      "adr": ["none", "reference"],
-      "execution": ["direct"],
-      "verification": ["self", "independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed"
+      ],
+      "adr": [
+        "none",
+        "reference"
+      ],
+      "delivery_boundary": [
+        "local-change"
+      ]
     },
-    "must": ["record the baseline", "keep one writer", "stage only task changes"],
-    "must_not": ["discard unrelated changes", "commit unrelated changes", "parallelize shared writers"]
+    "must": [
+      "record the baseline",
+      "leave unrelated user changes untouched",
+      "stage only task changes"
+    ],
+    "must_not": [
+      "discard unrelated changes",
+      "commit unrelated changes",
+      "stage unrelated paths"
+    ],
+    "fixture": "unrelated modified files already exist in the shared worktree"
   },
   {
     "id": "adr-source-drift-gate",
     "entry_skill": "clarify-and-plan",
     "prompt": "Implement the documented identity authority change and open a draft PR.",
-    "fixture": "an accepted ADR declares a source-conformance check that the baseline or implementation violates",
     "expected_facets": {
-      "clarification": ["proceed", "ask"],
-      "adr": ["reference", "reconcile"],
-      "execution": ["direct", "delegate"],
-      "verification": ["self", "independent"]
+      "mode": [
+        "change"
+      ],
+      "clarification": [
+        "proceed",
+        "ask"
+      ],
+      "adr": [
+        "reference",
+        "reconcile"
+      ],
+      "delivery_boundary": [
+        "draft-pr"
+      ]
     },
-    "must": ["run the ADR source-conformance gate", "distinguish a baseline failure from a regression", "stop delivery until code or authorized ADR intent is reconciled"],
-    "must_not": ["treat a failing check as a warning", "weaken or delete the enforcement declaration", "claim conformance without command evidence"]
+    "must": [
+      "run the ADR source-conformance gate",
+      "distinguish a baseline failure from a regression",
+      "stop delivery until code or authorized ADR intent is reconciled"
+    ],
+    "must_not": [
+      "treat a failing check as a warning",
+      "weaken or delete the enforcement declaration",
+      "claim conformance without command evidence"
+    ],
+    "fixture": "an accepted ADR declares a source-conformance check that the baseline or implementation violates"
   }
 ]

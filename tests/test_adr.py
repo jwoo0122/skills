@@ -75,7 +75,7 @@ class AdrToolTests(unittest.TestCase):
             python=sys.executable,
         )
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("validate: ok (5 records)", result.stdout)
+        self.assertIn("validate: ok (6 records)", result.stdout)
         self.assertIn("PyYAML", result.stderr)
 
     def test_launcher_rejects_explicit_python_without_pyyaml(self) -> None:
@@ -161,11 +161,11 @@ class AdrToolTests(unittest.TestCase):
 
     def test_dogfood_records_and_index_validate(self) -> None:
         result = self.run_cli("validate", ROOT)
-        self.assertIn("validate: ok (5 records)", result.stdout)
+        self.assertIn("validate: ok (6 records)", result.stdout)
 
     def test_dogfood_enforcement_checks_pass(self) -> None:
         result = self.run_cli("check", ROOT)
-        self.assertIn("check: ok (10 enforcement checks)", result.stdout)
+        self.assertIn("check: ok (9 enforcement checks)", result.stdout)
 
     def test_enforcement_detects_source_drift(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -175,21 +175,21 @@ class AdrToolTests(unittest.TestCase):
             source = root / "skills" / "clarify-and-plan" / "SKILL.md"
             source.write_text(
                 source.read_text(encoding="utf-8").replace(
-                    "activate `workflow-router`", "activate the router", 1
+                    "sole user-facing entry point", "the entry point", 1
                 ),
                 encoding="utf-8",
             )
             result = self.run_cli("check", root, expected=1)
             self.assertIn("enforcement failed", result.stderr)
-            self.assertIn("workflow.public-entrypoint/router-entry", result.stderr)
+            self.assertIn("workflow.public-entrypoint/sole-entry", result.stderr)
 
     def test_enforcement_detects_forbidden_source_text(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.copy_dogfood(root)
             shutil.copytree(ROOT / "skills", root / "skills")
-            source = root / "skills" / "workflow-router" / "agents" / "openai.yaml"
-            source.write_text(source.read_text(encoding="utf-8") + "\n$workflow-router\n", encoding="utf-8")
+            source = root / "skills" / "execute-to-pr" / "agents" / "openai.yaml"
+            source.write_text(source.read_text(encoding="utf-8") + "\n$execute-to-pr\n", encoding="utf-8")
             result = self.run_cli("check", root, expected=1)
             self.assertIn("forbids", result.stderr)
             self.assertIn("workflow.public-entrypoint/internal-metadata", result.stderr)
@@ -216,7 +216,7 @@ class AdrToolTests(unittest.TestCase):
             record.write_text(text[:start] + exception + text[end:], encoding="utf-8")
             self.run_cli("reindex", root)
             result = self.run_cli("check", root)
-            self.assertIn("8 enforcement checks, 1 declared exception", result.stdout)
+            self.assertIn("7 enforcement checks, 1 declared exception", result.stdout)
 
     def test_enforcement_requires_nonempty_checks_for_accepted_records(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -484,21 +484,14 @@ class AdrToolTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.copy_dogfood(root)
-            record = root / "adr" / "records" / "workflow" / "public-entrypoint.md"
+            record = root / "adr" / "records" / "architecture" / "living-decisions.md"
             record.write_text(
                 record.read_text(encoding="utf-8")
                 .replace("status: accepted", "status: superseded", 1)
                 .replace(
                     "superseded_by: []",
-                    "superseded_by:\n  - workflow.independent-facets",
+                    "superseded_by:\n  - workflow.public-entrypoint",
                     1,
-                ),
-                encoding="utf-8",
-            )
-            dependent = root / "adr" / "records" / "workflow" / "independent-facets.md"
-            dependent.write_text(
-                dependent.read_text(encoding="utf-8").replace(
-                    "depends_on:\n  - workflow.public-entrypoint", "depends_on: []", 1
                 ),
                 encoding="utf-8",
             )
@@ -543,24 +536,26 @@ class AdrToolTests(unittest.TestCase):
             with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 self.copy_dogfood(root)
-                replaced = root / "adr" / "records" / "execution" / "adaptive-delegation.md"
+                replaced = root / "adr" / "records" / "architecture" / "living-decisions.md"
                 replaced.write_text(
                     replaced.read_text(encoding="utf-8")
                     .replace("status: accepted", "status: superseded", 1)
                     .replace(
                         "superseded_by: []",
-                        "superseded_by:\n  - workflow.independent-facets",
+                        "superseded_by:\n  - interaction.material-ambiguity-loop",
                         1,
                     ),
                     encoding="utf-8",
                 )
-                replacement = root / "adr" / "records" / "workflow" / "independent-facets.md"
+                replacement = (
+                    root / "adr" / "records" / "interaction" / "material-ambiguity-loop.md"
+                )
                 replacement.write_text(
                     replacement.read_text(encoding="utf-8")
                     .replace("status: accepted", f"status: {status}", 1)
                     .replace(
                         "supersedes: []",
-                        "supersedes:\n  - execution.adaptive-delegation",
+                        "supersedes:\n  - architecture.living-decisions",
                         1,
                     ),
                     encoding="utf-8",
@@ -575,7 +570,7 @@ class AdrToolTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.copy_dogfood(root)
-            replaced = root / "adr" / "records" / "execution" / "adaptive-delegation.md"
+            replaced = root / "adr" / "records" / "interaction" / "material-ambiguity-loop.md"
             replaced.write_text(
                 replaced.read_text(encoding="utf-8")
                 .replace("status: accepted", "status: superseded", 1)
@@ -592,7 +587,7 @@ class AdrToolTests(unittest.TestCase):
                 .replace("status: accepted", "status: proposed", 1)
                 .replace(
                     "supersedes: []",
-                    "supersedes:\n  - execution.adaptive-delegation",
+                    "supersedes:\n  - interaction.material-ambiguity-loop",
                     1,
                 ),
                 encoding="utf-8",

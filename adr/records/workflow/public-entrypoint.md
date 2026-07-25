@@ -8,21 +8,23 @@ applies_to:
   - skills/*/agents/openai.yaml
 summary: "clarify-and-plan is the sole user-facing entry point for the workflow skill set."
 constrains:
-  - workflow.independent-facets
+  - workflow.minimal-authority-boundary
   - interaction.material-ambiguity-loop
 depends_on: []
 supersedes: []
 superseded_by: []
-last_reviewed: "2026-07-15"
+last_reviewed: "2026-07-26"
 enforcement:
-  - id: router-entry
+  - id: sole-entry
     path: skills/clarify-and-plan/SKILL.md
     must_contain:
-      - "activate `workflow-router`"
+      - "sole user-facing entry point"
+      - "Never ask the user to invoke another skill."
   - id: internal-metadata
-    path: skills/workflow-router/agents/openai.yaml
+    path: skills/*/agents/openai.yaml
     must_not_contain:
-      - "$workflow-router"
+      - "$execute-to-pr"
+      - "$maintain-architecture-decisions"
 ---
 
 # Sole public workflow entry point
@@ -37,11 +39,11 @@ How does a user start the chained workflow without learning its internal stages?
 
 ## Context and forces
 
-The workflow spans routing, clarification, ADR maintenance, implementation, and review. Exposing each stage as a user command leaks orchestration details and makes behavior harness-dependent.
+The workflow spans clarification, ADR maintenance, and implementation delivery. Exposing each stage as a user command leaks orchestration details and makes behavior harness-dependent.
 
 ## Invariants
 
-- Direct invocation of `clarify-and-plan` enters the router once.
+- `clarify-and-plan` owns the workflow from direct invocation through the authorized delivery boundary.
 - Internal transitions happen without asking the user to invoke another skill.
 - Internal-skill visibility metadata remains a best-effort harness hint, not a security boundary.
 

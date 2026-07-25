@@ -1,28 +1,38 @@
 ---
 name: clarify-and-plan
-description: User-facing entry point for a coding workflow that inspects repository and ADR facts, repeatedly resolves material ambiguity, reconciles durable architectural intent, and defines observable acceptance before implementation. Use when the user invokes clarify-and-plan or when workflow-router selects clarification; continue until consequential choices are resolved, then chain internally into ADR maintenance and execution without requiring another user invocation.
+description: User-facing entry point for a coding workflow that inspects repository and ADR facts, repeatedly resolves material ambiguity, reconciles durable architectural intent, and defines observable acceptance before implementation. Use when the user invokes clarify-and-plan or when a request needs its intent resolved before a change; continue until consequential choices are resolved, then chain internally into ADR maintenance and execution without requiring another user invocation.
 ---
 
 # Clarify and Plan
 
-Turn an ambiguous request into a bounded implementation brief and reconcile any durable architectural decisions before implementation dispatch.
+Turn an ambiguous request into a bounded implementation brief and reconcile any durable architectural decisions before implementation.
 
-## Route direct entry once
+This skill is the sole user-facing entry point for the workflow. Own the workflow from entry through the authorized delivery boundary, and chain into `maintain-architecture-decisions` and `execute-to-pr` internally. Never ask the user to invoke another skill.
 
-When invoked directly, activate `workflow-router` and transfer workflow ownership to it. Do not independently interview, reconcile, or dispatch after the router has chosen and chained a path. The remaining sections apply when `workflow-router` activates this skill for `clarification=ask`; in that case, do not route again and own the workflow tail through the authorized delivery boundary.
+## Establish authority before anything else
 
-## Load policy and existing intent
+Record two authority boundaries and keep them fixed unless the user changes them:
 
-Activate `coding-workflow-core` if it is not already active. If nested activation is unavailable, locate and read the installed sibling `SKILL.md`.
+```text
+mode: read-only | change
+delivery_boundary: answer | plan | local-change | commit | draft-pr
+```
+
+- Do not turn an explanation, diagnosis, review, research, plan-only, or status request into a repository change.
+- When a change request does not mention commit or remote delivery, default to `local-change` without asking. Require explicit user authority for `commit` and `draft-pr`. Permission to edit files never implies permission to commit, push, or open a pull request.
+- Stop at a higher-priority instruction, permission, credential, or destructive-action boundary and report the exact boundary.
+
+## Load evidence before asking
 
 Before asking a question:
 
-1. Read active repository instructions.
+1. Read active repository instructions and the user's scope limits.
 2. Read `adr/index.yaml` when it exists and load only decisions relevant to likely paths, scopes, topics, and linked records. Do not create `adr/` just to begin clarification.
-3. Inspect relevant code, tests, public interfaces, conventions, and Git state.
-4. Separate facts established by that evidence from choices only the user can make.
+3. When an ADR system exists, run `<maintain-architecture-decisions skill root>/scripts/adr check --root <repository-root>` against the unmodified baseline. A baseline failure is evidence to surface, not a defect caused by the new task.
+4. Inspect relevant code, tests, public interfaces, conventions, and Git state.
+5. Separate facts established by that evidence from choices only the user can make.
 
-Do not ask the user to restate an accepted ADR or decide an internal detail that the repository already determines.
+Ask only for unresolved material choices. Do not ask the user to restate an accepted ADR or decide file placement, naming, internal APIs, or conventions that repository evidence already determines.
 
 ## Maintain a transient decision queue
 
@@ -35,7 +45,7 @@ For each unresolved choice, track internally:
 - the answer, evidence, or disclosed low-impact assumption;
 - affected acceptance checks and ADR IDs.
 
-Keep the queue in conversation or plan state, never in the repository. Reorder it after each answer and after new evidence.
+Keep the queue in conversation or plan state, never in the repository. Reorder it after each answer and after new evidence. Do not create permanent task databases, question logs, or issue records unless the user requests them.
 
 ## Run the grilling loop
 
@@ -49,7 +59,7 @@ Repeat until no material ambiguity remains:
 6. Infer or disclose a reversible, low-impact assumption when it does not materially change the result.
 7. Reinspect the repository or ADRs whenever an answer exposes a fact that can be verified there.
 
-Do not target a fixed number of questions. Do not start implementation because the interview feels long. Also do not continue asking once remaining uncertainty is immaterial, assumptions are visible, and acceptance can distinguish success from failure.
+Do not target a fixed number of questions, and do not treat request size alone as a reason to ask or to skip asking. Do not start implementation because the interview feels long. Also do not continue asking once remaining uncertainty is immaterial, assumptions are visible, and acceptance can distinguish success from failure.
 
 Read [the grilling loop](references/grilling-loop.md) when answers remain vague, decisions multiply, or the stopping condition is unclear.
 
@@ -62,14 +72,15 @@ After the user resolves consequential choices, determine whether any answer expr
 - Use `reconcile` when the same decision needs improvement or revision, a genuinely new decision question exists, or an accepted decision is superseded or retired.
 - Prefer revising the record that owns the same decision question over creating a chronological duplicate.
 - Preserve explicit relationships when a decision is split, merged, challenged, or reversed.
+- Never silently violate, rewrite, or bypass an accepted decision to make the requested change easier.
 
-When repository mutation is authorized, give one coordinator or `maintain-architecture-decisions` write ownership, reconcile the records, validate and reindex them, then dispatch implementation. Workers, diagnosticians, researchers, and reviewers may report ADR findings but must never edit `adr/**`. For a read-only or plan-only request, include the proposed ADR action in the brief without mutating the repository.
+When `mode=change`, activate `maintain-architecture-decisions` and reconcile the records before implementation. Keep ADR writes under this single coordinator role. For a read-only or plan-only request, include the proposed ADR action in the brief without mutating the repository.
 
 Do not let ADR reconciliation silently decide an unresolved product or architecture choice. Return to the grilling loop instead.
 
 ## Produce the implementation brief
 
-State a compact handoff:
+Skip this section when the delivery boundary is `answer`; a read-only request is answered with evidence, not with a brief. Otherwise state a compact handoff:
 
 ```text
 Goal:
@@ -79,13 +90,11 @@ Assumptions:
 Acceptance checks:
 Relevant ADR IDs and invariants:
 ADR action:
-Execution facet:
-Verification facet:
 Delivery boundary:
 Implementation units:
 ```
 
-Map every important behavior to an observable automated check or, when automation is disproportionate, an explicit manual check. Scale execution to the actual implementation units and verification to impact and uncertainty; do not derive either from the number of questions or ADR edits.
+Map every important behavior to an observable automated check or, when automation is disproportionate, an explicit manual check. Prefer existing tests, regression tests, type checks, linters, builds, and concrete API, CLI, UI, data, or performance assertions.
 
 ## Exit and continue
 
@@ -98,4 +107,10 @@ Exit only when:
 - durable architectural intent is reconciled or proposed within the authorized scope; and
 - implementation units have enough context to start.
 
-If implementation is authorized, activate `execute-to-pr` immediately with the brief, selected facets, relevant ADR subset, and explicit delivery boundary. Ask again only when required authority or a material decision is still missing, or when the next action is irreversible, destructive, or scope-expanding beyond what the user authorized. Treat security sensitivity and cost as verification signals; do not request redundant approval when the user already granted informed authority. If implementation later exposes a new material ambiguity, return to this loop.
+Then continue according to the authorized delivery boundary:
+
+- For `answer`, perform the bounded inspection yourself, return the evidenced answer, and report any proposed ADR action without mutating the repository. Do not produce an implementation brief and do not activate an implementation stage.
+- For `plan`, return the brief itself as the deliverable, including the proposed ADR action, and stop.
+- For `local-change`, `commit`, or `draft-pr`, activate `execute-to-pr` immediately with the brief, the relevant ADR subset, and the explicit delivery boundary.
+
+Ask again only when required authority or a material decision is still missing, or when the next action is irreversible, destructive, or scope-expanding beyond what the user authorized. If implementation later exposes a new material ambiguity, return to this loop.

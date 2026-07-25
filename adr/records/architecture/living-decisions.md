@@ -6,17 +6,15 @@ decision_type: knowledge-system
 applies_to:
   - adr/**
   - skills/maintain-architecture-decisions/**
-  - skills/workflow-router/**
   - skills/clarify-and-plan/**
-  - skills/review-change/**
+  - skills/execute-to-pr/**
 summary: "Maintain ADRs as a semantic, revisable map of durable architectural intent."
-constrains:
-  - execution.adaptive-delegation
+constrains: []
 depends_on:
   - interaction.material-ambiguity-loop
 supersedes: []
 superseded_by: []
-last_reviewed: "2026-07-16"
+last_reviewed: "2026-07-26"
 enforcement:
   - id: checker-implementation
     path: skills/maintain-architecture-decisions/scripts/adr.py
@@ -27,6 +25,10 @@ enforcement:
     path: skills/maintain-architecture-decisions/SKILL.md
     must_contain:
       - "scripts/adr check"
+  - id: implementation-gate
+    path: skills/execute-to-pr/SKILL.md
+    must_contain:
+      - "Run the ADR conformance gate before and after implementation."
 ---
 
 # Semantic living architecture decisions
@@ -49,7 +51,7 @@ Code reveals implementation but often not why a boundary, authority, compatibili
 - `index.yaml` is the low-resolution router map and matches all records.
 - Accepted decisions remain open to explicit correction, reversal, supersession, and retirement.
 - Supersession relationships are bidirectional.
-- One logical writer owns ADR changes; workers and reviewers report candidates and conflicts.
+- One logical writer owns ADR changes; any other context reports candidates and conflicts instead of editing.
 - Deterministic tooling validates structure and declared source-conformance assertions, not architectural importance or unconstrained prose.
 - Every accepted record MUST declare at least one repository-relative enforcement check or an explicit, evidenced enforcement exception; the gate MUST run before and after an authorized implementation.
 - ADR operations use a repository-provided, side-effect-free launcher that selects an interpreter capable of importing its required dependencies without installing packages.
@@ -64,7 +66,7 @@ Agents can load a small relevant decision subset and avoid re-asking settled int
 
 ## Enforcement
 
-The ADR launcher reports the selected Python interpreter and PyYAML location, then runs the structural and source-conformance tool with that same interpreter. It never installs dependencies. The tool validates semantic IDs, paths, statuses, relationships, required sections, index freshness, enforcement declarations, and idempotent indexing. `adr check` reads every accepted record's declared targets and fails on an explicit source mismatch or undocumented enforcement exception. Reviewers compare changes with relevant accepted records and the gate result.
+The ADR launcher reports the selected Python interpreter and PyYAML location, then runs the structural and source-conformance tool with that same interpreter. It never installs dependencies. The tool validates semantic IDs, paths, statuses, relationships, required sections, index freshness, enforcement declarations, and idempotent indexing. `adr check` reads every accepted record's declared targets and fails on an explicit source mismatch or undocumented enforcement exception. Change review compares the diff with relevant accepted records and the gate result.
 
 ## Revisit when
 

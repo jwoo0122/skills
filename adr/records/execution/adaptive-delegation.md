@@ -19,7 +19,7 @@ enforcement_exception: null
 
 # Adaptive implementation and verification
 
-Superseded by `workflow.minimal-authority-boundary`. The ADR conformance gate survives there as an execution requirement. The delegation and reviewer topology was withdrawn: it duplicated harness-level and user-level instructions that already govern subagent use, and the `review-change` skill that carried the independent-review role was removed.
+Superseded by `workflow.minimal-authority-boundary`. The ADR conformance gate and the requirement that a risky change be judged by a context that did not write it both survive there. What was withdrawn is the topology around them: the delegation policy duplicated harness-level and user-level instructions that already govern subagent use, the `self`/`independent`/`multi-axis` scale prescribed reviewer counts, and the `review-change` skill that carried the reviewer role was removed.
 
 ## Decision question
 

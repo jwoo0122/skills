@@ -59,6 +59,12 @@ Before delivery, inspect the complete task diff for:
 - secrets, generated artifacts, debug output, or temporary files;
 - test assertions that cannot fail for the regression.
 
+## Review independently when impact warrants it
+
+That inspection is self-review and is sufficient for an ordinary bounded change. When the change is architecturally significant, security-sensitive, or expensive to reverse, obtain a review from a context that did not write the change before delivery, even when the diff is small. That context may be a subagent, a separate session, or the user.
+
+Give it the brief, the relevant ADRs, the raw task diff, and the verification evidence rather than the implementer's summary. Keep it read-only; a reviewer does not patch the files it is judging. Require each finding to identify its evidence, the violated requirement or invariant, and the consequence. Decide which findings are valid, fix those, and rerun the affected checks.
+
 ## Reconcile architecture decisions
 
 Reassess the completed diff against the relevant ADR subset before delivery.

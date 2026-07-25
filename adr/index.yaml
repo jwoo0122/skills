@@ -121,6 +121,7 @@ decisions:
         path: skills/execute-to-pr/SKILL.md
         must_contain:
           - Run the ADR conformance gate before and after implementation.
+          - obtain a review from a context that did not write the change
     enforcement_exception: null
   - id: workflow.public-entrypoint
     status: accepted

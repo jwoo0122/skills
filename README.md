@@ -1,6 +1,6 @@
 # Autonomous Coding Workflow Skills
 
-This package gives coding agents a durable minimum workflow for turning one user request into an appropriately clarified, architecturally coherent, implemented, and verified change.
+This package gives coding agents a durable minimum workflow for turning one user request into an appropriately clarified, architecturally coherent, implemented, and verified change, with an independent check when impact warrants it.
 
 The user starts one public skill. The agent then decides how much clarification and architectural reconciliation the actual work needs, and stops at the authority boundary the user granted:
 
@@ -12,6 +12,7 @@ clarify-and-plan (only public entry point)
   -> reconcile durable architectural intent
   -> execute-to-pr
      -> implement, run the ADR conformance gate, verify
+     -> review from a fresh context when impact warrants it
      -> stop at local changes, or commit, push, and open a draft PR when authorized
 ```
 
@@ -20,9 +21,9 @@ clarify-and-plan (only public entry point)
 The skill set is designed to reduce two recurring failures in agentic coding:
 
 1. A lightweight task is buried under ritual questions and planning artifacts.
-2. A consequential task is implemented from guessed intent, without persistent architectural context.
+2. A consequential task is implemented from guessed intent, without persistent architectural context or an independent check.
 
-It keeps the workflow adaptive rather than deterministic. A clear typo can be fixed directly. A vague product change is grilled until material ambiguity is resolved. A one-line change with system-wide meaning can update an architecture decision. A large but fully specified migration can skip product questions entirely.
+It keeps the workflow adaptive rather than deterministic. A clear typo can be fixed directly. A vague product change is grilled until material ambiguity is resolved. A one-line change with system-wide meaning can update an architecture decision and be reviewed by a context that did not write it. A large but fully specified migration can skip product questions entirely.
 
 The package also maintains `adr/` as revisable architectural memory: durable intent that code inspection alone cannot reliably recover, organized by semantic decision rather than chronological numbering. ADRs constrain future work without becoming immutable; later evidence can improve, challenge, revise, split, supersede, or retire a decision.
 
@@ -80,7 +81,7 @@ Example:
 $clarify-and-plan Add retry support to webhook delivery and open a draft PR.
 ```
 
-After entry, do not invoke each stage manually. The workflow constrains two authority boundaries and one architectural judgment, and leaves execution tactics to the model:
+After entry, do not invoke each stage manually. The workflow constrains two authority boundaries, one architectural judgment, and the independence of the evidence behind a risky change; it leaves execution tactics to the model:
 
 ```text
 mode: read-only | change
@@ -93,6 +94,7 @@ Permission to edit does not imply permission to commit or push. A change request
 
 - Clarification depends on unresolved consequential choices, not prompt length or code size.
 - ADR handling depends on durable architectural intent, not question count or changed lines.
+- Independent review depends on architectural significance, security sensitivity, and reversibility cost, not diff size.
 
 The workflow continues automatically until it reaches the requested boundary: an answer, a plan, verified local changes, a local commit, or a confirmed draft pull request. Explicit limits such as “plan only,” “do not commit,” or “stop after tests” remain authoritative.
 
@@ -121,7 +123,9 @@ The durable output of that conversation should not be a linear pile of decision 
 
 Clarification difficulty, architectural significance, and implementation size are different dimensions. Coupling them would make the workflow brittle: a tiny edit can carry a major system decision, while a large mechanical migration can be unambiguous. The workflow keeps them separate and leaves concrete tactics to the model.
 
-It deliberately does not prescribe an execution topology, a delegation policy, or a reviewer count. Those tactics are already governed by the harness and the user's own instructions, and encoding them here only added prose that a capable model does not need. What a model cannot safely infer is authority: whether a request permits a repository change at all, and whether editing files also permits committing, pushing, or opening a pull request. That is what the workflow constrains, along with the durable architectural intent recorded in `adr/`.
+It deliberately does not prescribe an execution topology, a delegation policy, or a reviewer count. Those tactics are already governed by the harness and the user's own instructions, and encoding them here only added prose that a capable model does not need.
+
+What remains is what a model cannot supply from its own judgment. The first is authority: whether a request permits a repository change at all, and whether editing files also permits committing, pushing, or opening a pull request. The second is the durable architectural intent recorded in `adr/`. The third is independence: an implementer reading its own diff re-applies the assumptions that produced it, so a change that is architecturally significant, security-sensitive, or expensive to reverse is judged by a context that did not write it. Which context that is — a subagent, another session, or the user — is left to the model.
 
 The result is deliberately a set of minimum interaction and engineering invariants, not a workflow engine. It aims to reduce dangerous differences between models while preserving the intelligence, flexibility, and efficiency of the model running it.
 

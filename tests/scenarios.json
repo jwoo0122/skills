@@ -177,7 +177,7 @@
     "must": [
       "avoid re-asking settled product decisions",
       "keep the change scoped to the specified protocol",
-      "verify against the documented acceptance tests"
+      "verify against the documented acceptance tests and review independently"
     ],
     "must_not": [
       "grill solely because the change is large",
@@ -206,7 +206,7 @@
     "must": [
       "reconcile the existing semantic ADR",
       "allow direct implementation",
-      "verify the code and the ADR together"
+      "review from a context that did not write the change"
     ],
     "must_not": [
       "ignore ADR impact because the diff is small",

@@ -1,0 +1,20 @@
+{
+  "name": "jwoo0122-skills",
+  "version": "2.0.0",
+  "description": "Autonomous coding workflow skills for clarification, architecture decisions, implementation, and verification.",
+  "author": {
+    "name": "jwoo0122"
+  },
+  "repository": "https://github.com/jwoo0122/skills",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "coding-workflow",
+    "architecture-decisions"
+  ],
+  "skills": [
+    "./skills/clarify-and-plan",
+    "./skills/execute-to-pr",
+    "./skills/maintain-architecture-decisions"
+  ]
+}

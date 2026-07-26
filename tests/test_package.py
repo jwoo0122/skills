@@ -197,15 +197,29 @@ def check_required_resources() -> None:
 
 
 def check_install_documentation() -> None:
-    command = "npx skills add {source} --skill '*'"
     for relative in ("README.md", "docs/COMPATIBILITY.md"):
         text = (ROOT / relative).read_text()
-        assert command.format(source=".") in text, f"missing local skills CLI command in {relative}"
-        assert command.format(source="OWNER/REPOSITORY") in text, f"missing GitHub skills CLI command in {relative}"
+        assert "npx skills add ." in text, f"missing local skills CLI command in {relative}"
+        assert "npx skills add jwoo0122/skills" in text, f"missing GitHub skills CLI command in {relative}"
+        assert "Jwoo0122 Skills" in text, f"missing grouped selection instructions in {relative}"
         assert "all three" in text.lower(), f"all three skills are not required in {relative}"
+        assert "--skill '*' -y" in text, f"missing non-interactive install command in {relative}"
         assert "install.sh" not in text, f"custom installer remains documented in {relative}"
         assert "adapters/" not in text, f"legacy adapters remain documented in {relative}"
         assert "bootstrap" not in text.lower(), f"legacy bootstrap remains documented in {relative}"
+
+
+def check_plugin_manifest() -> None:
+    manifest = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text())
+    assert manifest["name"] == "jwoo0122-skills"
+    assert manifest["version"] == json.loads((ROOT / "package.json").read_text())["version"]
+    assert manifest["repository"] == "https://github.com/jwoo0122/skills"
+    declared = manifest["skills"]
+    expected = {f"./skills/{name}" for name in EXPECTED_SKILLS}
+    assert len(declared) == len(set(declared)), "plugin manifest contains duplicate skill paths"
+    assert set(declared) == expected, "plugin group must contain exactly all workflow skills"
+    for relative in declared:
+        assert (ROOT / relative / "SKILL.md").is_file(), f"plugin skill path is invalid: {relative}"
 
 
 def check_pi_manifest() -> None:
@@ -226,6 +240,11 @@ def check_release_automation() -> None:
     assert config["release-type"] == "node"
     assert re.fullmatch(r"[0-9a-f]{40}", config["bootstrap-sha"])
     assert "." in config["packages"]
+    assert {
+        "type": "json",
+        "path": ".claude-plugin/plugin.json",
+        "jsonpath": "$.version",
+    } in config["packages"]["."]["extra-files"]
     assert "branches:\n      - main" in workflow
     assert "googleapis/release-please-action@" in workflow
     assert "contents: write" in workflow
@@ -241,6 +260,7 @@ def main() -> None:
     check_scripts()
     check_required_resources()
     check_install_documentation()
+    check_plugin_manifest()
     check_pi_manifest()
     check_release_automation()
     print("package structure: ok")

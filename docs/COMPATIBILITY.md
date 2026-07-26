@@ -14,19 +14,21 @@ The specification recommends keeping `SKILL.md` below 500 lines and resolving re
 
 The [Vercel `skills` CLI](https://github.com/vercel-labs/skills) accepts local paths and GitHub repositories. Install all three skills; installing only `clarify-and-plan` leaves its named dependencies unavailable.
 
+From GitHub:
+
+```sh
+npx skills add jwoo0122/skills
+```
+
+Select the **Jwoo0122 Skills** group to toggle all three skills together. The repository's `.claude-plugin/plugin.json` declares the group and its members; Skills CLI 1.5.20 and later use that manifest in the selection UI.
+
 From a local checkout:
 
 ```sh
-npx skills add . --skill '*'
+npx skills add .
 ```
 
-From GitHub, after replacing `OWNER/REPOSITORY`:
-
-```sh
-npx skills add OWNER/REPOSITORY --skill '*'
-```
-
-Project installation is the default. Add `--global` for user scope or `--agent <agent>` to select a supported harness. The CLI installs discovered skill folders; it does not make this package an always-loaded instruction layer.
+For non-interactive installation, append `--skill '*' -y`. Project installation is the default. Add `--global` for user scope or `--agent <agent>` to select a supported harness. The CLI installs the group's individual skill folders; it does not make this package an always-loaded instruction layer.
 
 The two `user-invocable` fields are deliberate Claude-compatible extensions. Strict Agent Skills validators that accept only specification fields may reject those files even though the Vercel CLI installs them. Removing the fields restores strict frontmatter portability but also removes the only supported model-only visibility hint; it does not improve chaining.
 

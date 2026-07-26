@@ -44,19 +44,21 @@ Only `clarify-and-plan` is intended for direct user invocation. The remaining sk
 
 Use the standard [`skills` CLI](https://github.com/vercel-labs/skills). No repository-specific installer is required.
 
-From a local checkout:
+From GitHub:
 
 ```sh
-npx skills add . --skill '*'
+npx skills add jwoo0122/skills
 ```
 
-From GitHub, after replacing `OWNER/REPOSITORY`:
+At the skill prompt, select the **Jwoo0122 Skills** group to toggle all three workflow skills together. The group comes from the bundled Claude plugin manifest, which the Skills CLI also uses for grouped selection.
+
+From a local checkout, use the same grouped prompt:
 
 ```sh
-npx skills add OWNER/REPOSITORY --skill '*'
+npx skills add .
 ```
 
-Project installation is the default. Add `--global` for a user-level installation or `--agent <agent>` to select a supported harness. Start a new agent session if the harness builds its skill catalog only at session start.
+For a non-interactive installation of every skill, use `--skill '*' -y`. Project installation is the default. Add `--global` for a user-level installation or `--agent <agent>` to select a supported harness. Start a new agent session if the harness builds its skill catalog only at session start.
 
 ADR structural validation uses PyYAML. The bundled launcher checks installed Python interpreters and uses one that can import it:
 

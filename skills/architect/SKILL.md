@@ -16,9 +16,10 @@ Do not ask merely because several implementation techniques exist. Resolve repos
 ## Before changing the repository
 
 1. Inspect the request, repository evidence, and active repository instructions.
-2. If `adr/.adr-system.yaml` exists, run the repository's `adr check` command before implementation. A failure blocks delivery but does not grant authority to repair unrelated areas. Investigate it; fix it only when existing intent and granted scope make the repair unambiguous, otherwise ask.
-3. Use `adr/index.yaml` as the decision map. Read records relevant to the requested behavior, affected paths, constraints, and dependencies; do not load every ADR by default.
-4. Compare the request, accepted ADRs, and implementation. A current explicit user decision outranks an accepted ADR; accepted architectural intent outranks an accidental implementation state. Never silently choose one side of a conflict.
+2. Inspect `adr/.adr-system.yaml` before invoking its checker. If it declares legacy `maintain-architecture-decisions` version `2`, do not change only the marker. If the user did not request migration, explain that semantic migration is required and ask before expanding scope. When authorized, use the internal ADR skill's `references/migrate-legacy-v2.md`; restrict the bootstrap exception to migration work and pass the new global gate before resuming the original request. Treat every other unknown schema as unsupported rather than guessing a migration.
+3. If a current ADR system exists, run the repository's `adr check` command before implementation. A failure blocks delivery but does not grant authority to repair unrelated areas. Investigate it; fix it only when existing intent and granted scope make the repair unambiguous, otherwise ask.
+4. Use `adr/index.yaml` as the decision map. Read records relevant to the requested behavior, affected paths, constraints, and dependencies; do not load every ADR by default.
+5. Compare the request, accepted ADRs, and implementation. A current explicit user decision outranks an accepted ADR; accepted architectural intent outranks an accidental implementation state. Never silently choose one side of a conflict.
 
 ## Expose consequential design choices
 

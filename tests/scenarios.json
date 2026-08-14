@@ -70,5 +70,21 @@
       "Run the global ADR check before implementation and block on failure.",
       "Run it again after implementation and block delivery on any failure."
     ]
+  },
+  {
+    "id": "legacy-v2-discovered-during-change",
+    "request": "Add a small feature to a repository whose ADR marker is maintain-architecture-decisions version 2.",
+    "expected": [
+      "Do not update only the marker or continue the original change.",
+      "Explain the semantic migration requirement and ask before adding migration to scope."
+    ]
+  },
+  {
+    "id": "authorized-legacy-v2-migration",
+    "request": "Migrate this repository's legacy v2 ADRs to the current protocol.",
+    "expected": [
+      "Use the migration playbook to derive meaning-based invariants from every accepted record.",
+      "Restrict bootstrap changes to migration work, pass the new global gate, and report weakened or ambiguous enforcement."
+    ]
   }
 ]

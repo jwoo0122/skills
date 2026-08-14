@@ -109,6 +109,8 @@ An installed skill can fall back to its bundled reference launcher when a target
 
 Copy or symlink the directories under `skills/` into your agent's skill directory. The included Claude plugin manifest exposes the same directory.
 
+When upgrading from 2.x, remove obsolete `clarify-and-plan` and `execute-to-pr` installations. If a repository already has a version 2 ADR marker, ask `architect` to perform the semantic migration; do not update only `.adr-system.yaml`. Repositories without `adr/` need no data migration. See `CHANGELOG.md` for the release checklist.
+
 ## Development
 
 ```sh

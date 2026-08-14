@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.0.0] (2026-08-15)
+
+### ⚠ BREAKING CHANGES
+
+- `architect` replaces `clarify-and-plan` as the sole intended public entry point, and `execute-to-pr` is removed. Existing installations may need to remove the obsolete skills explicitly before installing `architect`.
+- Existing `maintain-architecture-decisions` schema version 2 directories require semantic migration. Do not update only `.adr-system.yaml`: use `architect` with the bundled `migrate-legacy-v2` playbook to reinterpret accepted invariants and enforcement.
+- The ADR protocol is now repository-owned `semantic-living-adr` version 1. Source substring assertions and record-wide enforcement exceptions are replaced by invariant-level executable or evidenced manual enforcement.
+
+### Features
+
+- add consequential design clarification and model-directed execution through `architect`;
+- add executable argv check registration and honest manual invariant reporting;
+- expose a replaceable repository-level `scripts/adr` interface;
+- teach models to migrate legacy ADRs semantically and reject marker-only upgrades.
+
+### Upgrade
+
+1. Remove obsolete `clarify-and-plan` and `execute-to-pr` installations, then install `architect` and the updated internal ADR skill.
+2. Repositories without `adr/` need no data migration.
+3. For legacy v2 repositories, ask `architect` to migrate the ADR system; review any ambiguity or weakened enforcement it reports.
+4. Run the repository ADR check and update CI to use the repository-owned ADR interface when available.
+
 ## [2.0.0](https://github.com/jwoo0122/skills/compare/v1.0.1...v2.0.0) (2026-07-25)
 
 

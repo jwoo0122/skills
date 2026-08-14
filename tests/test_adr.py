@@ -160,6 +160,33 @@ class AdrSchemaContractTests(AdrTestCase):
             result = self.write_repo(Path(directory), enforcement=incomplete, expected=1)
             self.assertIn("evidence must be a non-empty", result.stderr)
 
+    def test_legacy_v2_marker_requires_semantic_migration(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            adr = root / "adr"
+            adr.mkdir()
+            (adr / ".adr-system.yaml").write_text(
+                "schema: maintain-architecture-decisions\nversion: 2\n",
+                encoding="utf-8",
+            )
+            result = self.run_cli("validate", root, expected=1)
+            self.assertIn("legacy ADR schema detected", result.stderr)
+            self.assertIn("do not update the marker alone", result.stderr)
+            self.assertIn("migrate-legacy-v2", result.stderr)
+
+    def test_unknown_schema_is_not_misreported_as_legacy_v2(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            adr = root / "adr"
+            adr.mkdir()
+            (adr / ".adr-system.yaml").write_text(
+                "schema: another-adr-system\nversion: 2\n",
+                encoding="utf-8",
+            )
+            result = self.run_cli("validate", root, expected=1)
+            self.assertIn("marker/version conflict", result.stderr)
+            self.assertNotIn("legacy ADR schema detected", result.stderr)
+
     def test_registry_requires_argv_and_rejects_recursive_adr_check(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             result = self.write_repo(Path(directory), registry="  contract:\n    run: echo pass\n", expected=1)

@@ -67,6 +67,18 @@ class PackageStructureTests(unittest.TestCase):
         self.assertIn("reference clients, not exclusive authorities", readme)
         self.assertTrue((ROOT / "scripts" / "adr").is_file())
 
+    def test_legacy_migration_playbook_is_connected_to_architect(self) -> None:
+        architect = (SKILLS / "architect" / "SKILL.md").read_text(encoding="utf-8")
+        maintainer = (SKILLS / "maintain-architecture-decisions" / "SKILL.md").read_text(encoding="utf-8")
+        playbook = SKILLS / "maintain-architecture-decisions" / "references" / "migrate-legacy-v2.md"
+        self.assertTrue(playbook.is_file())
+        self.assertIn("migrate-legacy-v2.md", architect)
+        self.assertIn("migrate-legacy-v2.md", maintainer)
+        text = playbook.read_text(encoding="utf-8")
+        self.assertIn("Do not assume one legacy enforcement entry equals one invariant", text)
+        self.assertIn("update only the marker", text)
+        self.assertIn("Do not resume the original change until migration passes", text)
+
     def test_skill_documents_have_bounded_progressive_disclosure(self) -> None:
         for path in sorted(SKILLS.glob("*/SKILL.md")):
             lines = path.read_text(encoding="utf-8").splitlines()

@@ -45,6 +45,20 @@ decisions:
       - invariant: repository-owned-protocol
         kind: executable
         check: package-contract
+      - invariant: legacy-v2-detection
+        kind: executable
+        check: adr-tool-contract
+      - invariant: semantic-legacy-migration
+        kind: manual
+        reason: Preserving decision meaning and recognizing authority or ambiguity
+          require repository and conversation context.
+        evidence:
+          - skills/maintain-architecture-decisions/references/migrate-legacy-v2.md
+          - tests/scenarios.json#legacy-v2-discovered-during-change
+          - tests/scenarios.json#authorized-legacy-v2-migration
+        revisit_when:
+          - A portable deterministic harness can evaluate semantic preservation and
+            user-authority boundaries.
       - invariant: portable-launcher
         kind: executable
         check: adr-tool-contract

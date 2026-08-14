@@ -187,6 +187,13 @@ def validate_marker(adr_root: Path) -> dict[str, list[str]]:
             f"ADR system marker is missing: {marker}; refusing to adopt an unmarked existing directory"
         )
     actual = load_yaml(marker)
+    if isinstance(actual, dict) and actual.get("schema") == "maintain-architecture-decisions" and actual.get("version") == 2:
+        raise AdrError(
+            "legacy ADR schema detected: maintain-architecture-decisions version 2\n"
+            "do not update the marker alone; this migration requires semantic review of every "
+            "accepted invariant and enforcement entry\n"
+            "use the updated architect workflow and its migrate-legacy-v2 playbook"
+        )
     if not isinstance(actual, dict) or actual.get("schema") != SYSTEM_NAME or actual.get("version") != SYSTEM_VERSION:
         raise AdrError(
             f"ADR system marker/version conflict in {marker}: expected schema {SYSTEM_NAME!r} version {SYSTEM_VERSION}"

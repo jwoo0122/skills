@@ -29,6 +29,10 @@ invariants:
     statement: "General source substring assertions are not an ADR enforcement mechanism."
   - id: repository-owned-protocol
     statement: "ADR data and conformance belong to the repository; the bundled skill and checker are replaceable reference clients."
+  - id: legacy-v2-detection
+    statement: "The reference checker detects the exact legacy v2 marker and rejects marker-only conversion with actionable guidance."
+  - id: semantic-legacy-migration
+    statement: "Legacy v2 ADRs are migrated by semantic review under explicit authority, never by a marker-only conversion."
   - id: portable-launcher
     statement: "The reference ADR tooling uses an existing compatible interpreter and never installs dependencies."
 enforcement:
@@ -57,6 +61,18 @@ enforcement:
   - invariant: repository-owned-protocol
     kind: executable
     check: package-contract
+  - invariant: legacy-v2-detection
+    kind: executable
+    check: adr-tool-contract
+  - invariant: semantic-legacy-migration
+    kind: manual
+    reason: "Preserving decision meaning and recognizing authority or ambiguity require repository and conversation context."
+    evidence:
+      - skills/maintain-architecture-decisions/references/migrate-legacy-v2.md
+      - tests/scenarios.json#legacy-v2-discovered-during-change
+      - tests/scenarios.json#authorized-legacy-v2-migration
+    revisit_when:
+      - "A portable deterministic harness can evaluate semantic preservation and user-authority boundaries."
   - invariant: portable-launcher
     kind: executable
     check: adr-tool-contract
@@ -72,7 +88,7 @@ How should durable architectural intent remain discoverable, revisable, and veri
 
 The repository owns `adr/` as a semantic living decision map. The data and conformance contract are independent of any particular model, skill, or checker. The bundled skill and checker are replaceable reference clients. Each record owns a stable question. Accepted records declare stable invariant IDs, and each invariant is connected exactly once to either a centrally registered executable check or an explicit manual entry with reason, evidence, and revisit conditions.
 
-The repository-level `scripts/adr check` interface validates the complete system and executes every referenced argv-based check once from the repository root without a shell. The exact `{python}` argv token resolves to the compatible interpreter selected by the launcher. It reports manual invariants as not mechanically verified. Source substring assertions are not a general conformance mechanism.
+Legacy `maintain-architecture-decisions` version 2 data requires authorized semantic migration of decisions, invariants, and enforcement; changing only the marker is forbidden. The repository-level `scripts/adr check` interface validates the complete current system and executes every referenced argv-based check once from the repository root without a shell. The exact `{python}` argv token resolves to the compatible interpreter selected by the launcher. It reports manual invariants as not mechanically verified. Source substring assertions are not a general conformance mechanism.
 
 ## Context and forces
 
@@ -87,6 +103,8 @@ Code reveals implementation but often not why a boundary or trade-off must persi
 - `honest-manual-status`: Manual invariants are structurally complete and reported as not mechanically verified.
 - `meaningful-conformance`: General source substring assertions are not an ADR enforcement mechanism.
 - `repository-owned-protocol`: ADR data and conformance belong to the repository; the bundled skill and checker are replaceable reference clients.
+- `legacy-v2-detection`: The reference checker detects the exact legacy v2 marker and rejects marker-only conversion with actionable guidance.
+- `semantic-legacy-migration`: Legacy v2 ADRs are migrated by semantic review under explicit authority, never by a marker-only conversion.
 - `portable-launcher`: The reference ADR tooling uses an existing compatible interpreter and never installs dependencies.
 
 ## Alternatives and trade-offs
@@ -99,7 +117,7 @@ CI and agents can use a stable repository-level interface while the underlying c
 
 ## Enforcement
 
-The package contract verifies that `adr/` states its repository ownership and exposes a repository-level command. The ADR tool contract exercises schema rejection, complete coverage, registry validation, command execution, deduplication, failure attribution, and manual reporting. The package contract exercises the repository's selected architectural surface. The launcher tests verify interpreter selection without installation.
+The package contract verifies that `adr/` states its repository ownership, exposes a repository-level command, and includes the semantic legacy migration playbook. Semantic migration remains explicitly manual because prose presence cannot prove model behavior. The ADR tool contract exercises legacy detection, schema rejection, complete coverage, registry validation, command execution, deduplication, failure attribution, and manual reporting. The package contract exercises the repository's selected architectural surface. The launcher tests verify interpreter selection without installation.
 
 ## Revisit when
 

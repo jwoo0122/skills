@@ -20,7 +20,7 @@ Operate as `architect`'s internal ADR reference client. The repository owns `adr
 
 Classify the durable effect as `none`, `reference`, `improve`, `revise`, `create`, `supersede`, or `retire`. Never rewrite an accepted decision solely because code drifted. A current explicit user decision can change an ADR; accidental implementation state cannot.
 
-Read `references/decision-policy.md` before changing records. Use the repository's template and semantic IDs. Update `last_reviewed` when meaning or enforcement changes, then reindex.
+Read `references/decision-policy.md` before changing records. If the marker declares legacy `maintain-architecture-decisions` version `2`, also read and follow `references/migrate-legacy-v2.md`; never perform a marker-only conversion. Use the repository's template and semantic IDs. Update `last_reviewed` when meaning or enforcement changes, then reindex.
 
 ## Invariants and enforcement
 

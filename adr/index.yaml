@@ -1,64 +1,75 @@
+schema: semantic-living-adr-index
 version: 1
-generated_by: maintain-architecture-decisions
 decisions:
   - id: architecture.living-decisions
     status: accepted
     scope: architecture
     decision_type: knowledge-system
-    summary: Maintain ADRs as a semantic, revisable map of durable architectural intent.
+    summary: Maintain ADRs as a semantic, revisable map whose accepted invariants
+      have honest executable or manual enforcement.
     applies_to:
       - adr/**
       - skills/maintain-architecture-decisions/**
-      - skills/clarify-and-plan/**
-      - skills/execute-to-pr/**
+      - skills/architect/**
     file: records/architecture/living-decisions.md
     constrains: []
     depends_on:
       - interaction.material-ambiguity-loop
     supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-26'
+    last_reviewed: '2026-08-15'
     enforcement:
-      - id: checker-implementation
-        path: skills/maintain-architecture-decisions/scripts/adr.py
-        must_contain:
-          - def enforce_repository
-          - 'enforcement failed:'
-      - id: workflow-gate-documentation
-        path: skills/maintain-architecture-decisions/SKILL.md
-        must_contain:
-          - scripts/adr check
-      - id: implementation-gate
-        path: skills/execute-to-pr/SKILL.md
-        must_contain:
-          - Run the ADR conformance gate before and after implementation.
-    enforcement_exception: null
-  - id: execution.adaptive-delegation
-    status: superseded
-    scope: execution
-    decision_type: workflow
-    summary: Scale implementer delegation and independent verification to execution
-      shape and risk.
-    applies_to:
-      - skills/execute-to-pr/**
-    file: records/execution/adaptive-delegation.md
-    constrains: []
-    depends_on:
-      - architecture.living-decisions
-    supersedes: []
-    superseded_by:
-      - workflow.minimal-authority-boundary
-    last_reviewed: '2026-07-26'
-    enforcement: []
-    enforcement_exception: null
+      - invariant: semantic-living-map
+        kind: manual
+        reason: Whether two records own the same stable architectural question requires
+          semantic judgment.
+        evidence:
+          - skills/maintain-architecture-decisions/references/decision-policy.md
+        revisit_when:
+          - A reliable semantic duplicate detector becomes portable.
+      - invariant: indexed-consistency
+        kind: executable
+        check: adr-tool-contract
+      - invariant: complete-invariant-coverage
+        kind: executable
+        check: adr-tool-contract
+      - invariant: executable-registry
+        kind: executable
+        check: adr-tool-contract
+      - invariant: honest-manual-status
+        kind: executable
+        check: adr-tool-contract
+      - invariant: meaningful-conformance
+        kind: executable
+        check: adr-tool-contract
+      - invariant: repository-owned-protocol
+        kind: executable
+        check: package-contract
+      - invariant: legacy-v2-detection
+        kind: executable
+        check: adr-tool-contract
+      - invariant: semantic-legacy-migration
+        kind: manual
+        reason: Preserving decision meaning and recognizing authority or ambiguity
+          require repository and conversation context.
+        evidence:
+          - skills/maintain-architecture-decisions/references/migrate-legacy-v2.md
+          - tests/scenarios.json#legacy-v2-discovered-during-change
+          - tests/scenarios.json#authorized-legacy-v2-migration
+        revisit_when:
+          - A portable deterministic harness can evaluate semantic preservation and
+            user-authority boundaries.
+      - invariant: portable-launcher
+        kind: executable
+        check: adr-tool-contract
   - id: interaction.material-ambiguity-loop
     status: accepted
     scope: interaction
     decision_type: interaction
-    summary: Iterate clarification until no unresolved ambiguity can materially change
-      the result.
+    summary: Expose consequential unresolved design choices without interrogating
+      reversible implementation details.
     applies_to:
-      - skills/clarify-and-plan/**
+      - skills/architect/**
     file: records/interaction/material-ambiguity-loop.md
     constrains:
       - architecture.living-decisions
@@ -66,76 +77,102 @@ decisions:
       - workflow.minimal-authority-boundary
     supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-26'
+    last_reviewed: '2026-08-15'
     enforcement:
-      - id: stopping-condition
-        path: skills/clarify-and-plan/SKILL.md
-        must_contain:
-          - Repeat until no material ambiguity remains
-      - id: evidence-first-questioning
-        path: skills/clarify-and-plan/SKILL.md
-        must_contain:
-          - Ask only for unresolved material choices
-    enforcement_exception: null
-  - id: workflow.independent-facets
-    status: superseded
-    scope: workflow
-    decision_type: workflow
-    summary: Route clarification, architecture, execution, and verification as independent
-      facets.
-    applies_to:
-      - skills/clarify-and-plan/**
-    file: records/workflow/independent-facets.md
-    constrains: []
-    depends_on:
-      - workflow.public-entrypoint
-    supersedes: []
-    superseded_by:
-      - workflow.minimal-authority-boundary
-    last_reviewed: '2026-07-26'
-    enforcement: []
-    enforcement_exception: null
+      - invariant: evidence-before-questions
+        kind: manual
+        reason: Whether the selected evidence is sufficient depends on the repository
+          and conversational context.
+        evidence:
+          - tests/scenarios.json#evidence-before-question
+        revisit_when:
+          - A portable deterministic harness can inspect model tool use and conversation
+            order.
+      - invariant: consequential-forks-exposed
+        kind: manual
+        reason: Recognizing material design alternatives requires contextual model
+          judgment.
+        evidence:
+          - tests/scenarios.json#consequential-design-fork
+        revisit_when:
+          - Portable deterministic behavioral evaluation becomes available.
+      - invariant: reversible-details-delegated
+        kind: manual
+        reason: Distinguishing local implementation technique from durable design
+          is context-sensitive.
+        evidence:
+          - tests/scenarios.json#reversible-local-choice
+        revisit_when:
+          - Portable deterministic behavioral evaluation becomes available.
+      - invariant: protected-boundaries-confirmed
+        kind: manual
+        reason: The meaning and breadth of user delegation must be judged from conversation
+          context.
+        evidence:
+          - tests/scenarios.json#delegated-design-protected-boundary
+        revisit_when:
+          - Portable deterministic behavioral evaluation becomes available.
   - id: workflow.minimal-authority-boundary
     status: accepted
     scope: workflow
     decision_type: workflow
-    summary: Constrain authority, durable architectural intent, and the independence
-      of evidence; leave execution tactics to the model.
+    summary: Constrain user authority and global ADR conformance while leaving execution
+      tactics to the model.
     applies_to:
-      - skills/clarify-and-plan/**
-      - skills/execute-to-pr/**
+      - skills/architect/**
     file: records/workflow/minimal-authority-boundary.md
     constrains:
       - interaction.material-ambiguity-loop
       - architecture.living-decisions
     depends_on:
       - workflow.public-entrypoint
-    supersedes:
-      - workflow.independent-facets
-      - execution.adaptive-delegation
+    supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-26'
+    last_reviewed: '2026-08-15'
     enforcement:
-      - id: authority-mode
-        path: skills/clarify-and-plan/SKILL.md
-        must_contain:
-          - 'mode: read-only | change'
-          - 'delivery_boundary: answer | plan | local-change | commit | draft-pr'
-          - default to `local-change` without asking
-      - id: independent-review
-        path: skills/execute-to-pr/SKILL.md
-        must_contain:
-          - obtain a review from a context that did not write the change
-          - Never escalate `local-change` to commit
-    enforcement_exception: null
+      - invariant: exact-user-authority
+        kind: manual
+        reason: Authority is supplied by the live user interaction and cannot be inferred
+          from repository files.
+        evidence:
+          - tests/scenarios.json#authority-boundary
+        revisit_when:
+          - A harness exposes machine-verifiable user authority capabilities.
+      - invariant: no-dedicated-execution-stage
+        kind: executable
+        check: package-contract
+      - invariant: autonomous-execution-tactics
+        kind: manual
+        reason: The model's chosen execution strategy depends on the live task and
+          active harness.
+        evidence:
+          - tests/scenarios.json#adaptive-execution-tactics
+        revisit_when:
+          - A portable harness can expose and evaluate execution-policy choices.
+      - invariant: global-adr-gate
+        kind: manual
+        reason: Repository code can provide the gate, but only the live agent or CI
+          can prove that it ran at both workflow boundaries.
+        evidence:
+          - tests/scenarios.json#pre-post-global-gate
+          - scripts/check.sh
+        revisit_when:
+          - A harness exposes machine-verifiable lifecycle hooks for repository changes.
+      - invariant: gate-does-not-expand-scope
+        kind: manual
+        reason: Whether a repair is related and authorized depends on task context.
+        evidence:
+          - tests/scenarios.json#unrelated-global-drift
+        revisit_when:
+          - A harness exposes machine-verifiable task scope and mutation authorization.
   - id: workflow.public-entrypoint
     status: accepted
     scope: workflow
     decision_type: interface
-    summary: clarify-and-plan is the sole user-facing entry point for the workflow
-      skill set.
+    summary: architect is the sole intended public entry point and owns authorized
+      repository changes through delivery.
     applies_to:
-      - skills/clarify-and-plan/**
+      - skills/architect/**
       - skills/*/agents/openai.yaml
     file: records/workflow/public-entrypoint.md
     constrains:
@@ -144,16 +181,25 @@ decisions:
     depends_on: []
     supersedes: []
     superseded_by: []
-    last_reviewed: '2026-07-26'
+    last_reviewed: '2026-08-15'
     enforcement:
-      - id: sole-entry
-        path: skills/clarify-and-plan/SKILL.md
-        must_contain:
-          - sole user-facing entry point
-          - Never ask the user to invoke another skill.
-      - id: internal-metadata
-        path: skills/*/agents/openai.yaml
-        must_not_contain:
-          - $execute-to-pr
-          - $maintain-architecture-decisions
-    enforcement_exception: null
+      - invariant: exact-skill-surface
+        kind: executable
+        check: package-contract
+      - invariant: sole-public-entry
+        kind: manual
+        reason: Portable Agent Skills metadata cannot make another skill private across
+          every harness.
+        evidence:
+          - skills/maintain-architecture-decisions/agents/openai.yaml
+          - docs/COMPATIBILITY.md
+        revisit_when:
+          - Portable skill metadata defines deterministic public and internal visibility.
+      - invariant: continuous-ownership
+        kind: manual
+        reason: Continuing through a conversation is model behavior, not a repository
+          structure property.
+        evidence:
+          - tests/scenarios.json#continuous-architect-ownership
+        revisit_when:
+          - A portable deterministic conversational harness becomes available.

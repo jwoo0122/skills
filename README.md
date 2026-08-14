@@ -1,158 +1,118 @@
-# Autonomous Coding Workflow Skills
+# Architecture workflow skills
 
-This package gives coding agents a durable minimum workflow for turning one user request into an appropriately clarified, architecturally coherent, implemented, and verified change, with an independent check when impact warrants it.
+A small skill set for making consequential engineering decisions explicit, preserving them as living architecture decisions, and checking that implementation still conforms.
 
-The user starts one public skill. The agent then decides how much clarification and architectural reconciliation the actual work needs, and stops at the authority boundary the user granted:
+## The problem
 
-```text
-clarify-and-plan (only public entry point)
-  -> record mode and delivery boundary
-  -> inspect repository and relevant ADRs
-  -> clarify material ambiguity until none remains
-  -> reconcile durable architectural intent
-  -> execute-to-pr
-     -> implement, run the ADR conformance gate, verify
-     -> review from a fresh context when impact warrants it
-     -> stop at local changes, or commit, push, and open a draft PR when authorized
-```
+Capable coding agents can usually find a plausible implementation. The harder problem is deciding whether they are authorized to choose among several plausible system designs.
 
-## Purpose
+Without an explicit architecture boundary, agents tend to:
 
-The skill set is designed to reduce two recurring failures in agentic coding:
+- turn an unstated product or engineering choice into an implementation default;
+- treat the current source tree as intent, even when it only reflects accidental drift;
+- lose the rationale and constraints that future changes must preserve;
+- keep ADRs as historical prose that no longer constrains the repository;
+- or compensate with a heavyweight workflow that adds ceremony to every change.
 
-1. A lightweight task is buried under ritual questions and planning artifacts.
-2. A consequential task is implemented from guessed intent, without persistent architectural context or an independent check.
+This package takes a narrower position: **architecture work is the identification, clarification, preservation, and verification of consequential choices.** It constrains those choices while leaving ordinary implementation tactics to the active model and harness.
 
-It keeps the workflow adaptive rather than deterministic. A clear typo can be fixed directly. A vague product change is grilled until material ambiguity is resolved. A one-line change with system-wide meaning can update an architecture decision and be reviewed by a context that did not write it. A large but fully specified migration can skip product questions entirely.
-
-The package also maintains `adr/` as revisable architectural memory: durable intent that code inspection alone cannot reliably recover, organized by semantic decision rather than chronological numbering. ADRs constrain future work without becoming immutable; later evidence can improve, challenge, revise, split, supersede, or retire a decision.
-
-## Included skills
-
-Install all three skills because the public entry point chains to the other two by name.
+## What it proposes
 
 ```text
-skills/
-  clarify-and-plan/                 public entry, grilling, acceptance
-  execute-to-pr/                    implementation, verification, delivery boundary
-  maintain-architecture-decisions/  semantic ADR maintenance and validation
+architect (sole intended public entry point)
+  ├─ inspect repository evidence and relevant accepted ADRs
+  ├─ expose unresolved consequential design choices
+  ├─ reconcile durable intent through living ADRs
+  ├─ choose implementation and verification tactics autonomously
+  └─ run the global ADR conformance gate before and after change
+
+maintain-architecture-decisions (internal)
+  ├─ maintain a semantic map of current decisions
+  ├─ connect each accepted invariant to executable or manual evidence
+  └─ run registered architecture checks locally or in CI
 ```
 
-Only `clarify-and-plan` is intended for direct user invocation. The remaining skills carry internal instructions and are loaded by the model when the workflow needs them. Hiding internal skills from command menus is harness-dependent; see [compatibility notes](docs/COMPATIBILITY.md).
+The workflow deliberately does **not** prescribe a planning document, phase sequence, delegation topology, reviewer count, branch strategy, or PR ritual. Those are execution choices, not universal architecture rules.
 
-## Installation
+## When this is useful
 
-Use the standard [`skills` CLI](https://github.com/vercel-labs/skills). No repository-specific installer is required.
+Use these skills when one or more of the following matters:
 
-From GitHub:
+- coding agents make changes to the same repository over time;
+- design intent must survive beyond one conversation or implementation;
+- a request may hide choices about contracts, ownership, failure semantics, compatibility, security, data, or operational risk;
+- you want the agent to challenge ambiguous design intent instead of silently selecting a reasonable default;
+- accepted ADRs should be checked against the repository in local development or CI.
 
-```sh
-npx skills add jwoo0122/skills
-```
+The package adds less value to disposable work with no durable constraints, no shared repository, and no need to preserve design intent.
 
-At the skill prompt, select the **Jwoo0122 Skills** group to toggle all three workflow skills together. The group comes from the bundled Claude plugin manifest, which the Skills CLI also uses for grouped selection.
+## How to use it
 
-From a local checkout, use the same grouped prompt:
-
-```sh
-npx skills add .
-```
-
-For a non-interactive installation of every skill, use `--skill '*' -y`. Project installation is the default. Add `--global` for a user-level installation or `--agent <agent>` to select a supported harness. Start a new agent session if the harness builds its skill catalog only at session start.
-
-ADR structural validation uses PyYAML. The bundled launcher checks installed Python interpreters and uses one that can import it:
-
-```sh
-skills/maintain-architecture-decisions/scripts/adr --print-python
-```
-
-The launcher never installs Python packages. Set `ADR_PYTHON` to choose an interpreter explicitly; if no candidate can import PyYAML, it reports the environment boundary without editing ADR files.
-
-## Usage
-
-Give the initial requirement to `clarify-and-plan` using the syntax supported by the harness:
-
-- Codex: `$clarify-and-plan`
-- Claude Code: `/clarify-and-plan`
-- Pi: `/skill:clarify-and-plan`
-- Other harnesses: name `clarify-and-plan` in the request or use their normal skill selector
-
-Example:
+Invoke `architect` for repository changes and state the goal, known constraints, and delivery authority. For example:
 
 ```text
-$clarify-and-plan Add retry support to webhook delivery and open a draft PR.
+Use $architect to add webhook retries without breaking existing consumers.
+Implement the change and open a draft PR.
 ```
 
-After entry, do not invoke each stage manually. The workflow constrains two authority boundaries, one architectural judgment, and the independence of the evidence behind a risky change; it leaves execution tactics to the model:
+`architect` then:
 
-```text
-mode: read-only | change
-delivery_boundary: answer | plan | local-change | commit | draft-pr
-clarification: proceed | ask
-adr: none | reference | reconcile
-```
+1. inspects repository evidence and the relevant accepted ADRs;
+2. runs the global ADR gate when the repository has an ADR system;
+3. asks before choosing among consequential unresolved designs;
+4. updates durable architectural intent when needed;
+5. chooses an appropriate implementation and verification strategy;
+6. runs the global ADR gate again before delivery.
 
-Permission to edit does not imply permission to commit or push. A change request that does not mention delivery defaults to local changes without asking.
+Be explicit about authority. Permission to edit does not imply permission to commit, push, or open a pull request.
 
-- Clarification depends on unresolved consequential choices, not prompt length or code size.
-- ADR handling depends on durable architectural intent, not question count or changed lines.
-- Independent review depends on architectural significance, security sensitivity, and reversibility cost, not diff size.
+Do not invoke `maintain-architecture-decisions` directly. `architect` uses it when a durable decision needs to be created or reconciled. A repository without ADRs should not gain an ADR system merely because the skill is installed.
 
-The workflow continues automatically until it reaches the requested boundary: an answer, a plan, verified local changes, a local commit, or a confirmed draft pull request. Explicit limits such as “plan only,” “do not commit,” or “stop after tests” remain authoritative.
+## What triggers a design question
 
-### ADR behavior
+`architect` asks when plausible answers would materially change:
 
-When `adr/index.yaml` exists, the workflow reads it first and loads only relevant records. The workflow does not create `adr/` for a routine task. It initializes the structure when an authorized change establishes durable architectural intent worth preserving.
+- public or internal contracts;
+- authority, ownership, or source of truth;
+- failure, consistency, retry, ordering, or recovery semantics;
+- compatibility and migration obligations;
+- security, privacy, consent, or data lifecycle;
+- irreversible state or expensive-to-reverse constraints;
+- operational cost or risk.
 
-Records use stable semantic IDs and own an architectural decision question. The workflow prefers improving or revising that record over appending a new file. One role owns ADR writes for a task; any other context returns conflicts or improvement candidates instead of racing to edit architectural intent.
+It should not ask merely because multiple implementation techniques exist. Local, reversible choices that fit repository conventions remain the model's responsibility.
 
-The maintenance tool supports:
+If the user delegates design discretion, the model may choose ordinary design details. That delegation does not silently authorize breaking accepted ADRs or public contracts, deciding security or privacy policy, risking data loss, performing irreversible migration, or materially increasing operational risk.
+
+## Living ADRs and conformance
+
+An ADR belongs in the system when a decision is **durable**, **constrains future work**, and is **not obvious from code and tests alone**. Records own stable design questions and are revised as current intent changes; they are not an append-only implementation history.
+
+The `adr/` directory is repository-owned data, not the private output of these skills. Any model or tool may maintain it if it preserves the declared semantics and conformance contract. The bundled skill and checker are reference clients that can be replaced by a better implementation.
+
+Every accepted ADR invariant has exactly one enforcement status:
+
+- `executable`: references a deterministic argv-based check registered in `adr/.adr-system.yaml`;
+- `manual`: records why deterministic verification is unavailable, what evidence can be inspected, and when automation should be reconsidered.
+
+Manual invariants are reported as **not mechanically verified**. A prose string appearing in a file is not treated as proof that the architecture is followed.
+
+Run the global gate through this repository's replaceable interface:
 
 ```sh
-skills/maintain-architecture-decisions/scripts/adr init
-skills/maintain-architecture-decisions/scripts/adr reindex
-skills/maintain-architecture-decisions/scripts/adr validate
-skills/maintain-architecture-decisions/scripts/adr check
+scripts/adr check --root .
 ```
 
-## Why I think this structure fits the purpose
+An installed skill can fall back to its bundled reference launcher when a target repository does not provide an ADR command. The command validates the ADR system and index, verifies complete invariant coverage, executes each referenced check once without a shell, and exits non-zero on failure. The same command can be used in CI.
 
-I want the user to provide the first requirement and then let the agent carry the workflow. A small, obvious change should stay small. A vague or consequential change should trigger a real design conversation, similar to a grilling session, until the choices that materially change the result are resolved.
+## Install
 
-Accepted ADRs may declare repository-relative `enforcement` checks (`must_contain` and `must_not_contain`). When static enforcement is inappropriate, they may declare an explicit `enforcement_exception` with a status, reason, evidence, and revisit conditions. The `adr check` command reads declared targets and fails mechanically on source drift or undocumented exceptions. This is a deterministic conformance gate for explicit assertions, not a semantic proof of every natural-language statement; use tests, parsers, and independent review for the remaining behavior.
+Copy or symlink the directories under `skills/` into your agent's skill directory. The included Claude plugin manifest exposes the same directory.
 
-The durable output of that conversation should not be a linear pile of decision logs. It should be structured architectural intent: the reasons, boundaries, invariants, and trade-offs that future agents cannot reliably reconstruct by scanning code. That intent must remain open to correction, contradiction, and reversal as evidence changes. Used this way, ADRs reduce the variance between models by narrowing how much hidden intent each model has to guess.
+When upgrading from 2.x, remove obsolete `clarify-and-plan` and `execute-to-pr` installations. If a repository already has a version 2 ADR marker, ask `architect` to perform the semantic migration; do not update only `.adr-system.yaml`. Repositories without `adr/` need no data migration. See `CHANGELOG.md` for the release checklist.
 
-Clarification difficulty, architectural significance, and implementation size are different dimensions. Coupling them would make the workflow brittle: a tiny edit can carry a major system decision, while a large mechanical migration can be unambiguous. The workflow keeps them separate and leaves concrete tactics to the model.
-
-It deliberately does not prescribe an execution topology, a delegation policy, or a reviewer count. Those tactics are already governed by the harness and the user's own instructions, and encoding them here only added prose that a capable model does not need.
-
-What remains is what a model cannot supply from its own judgment. The first is authority: whether a request permits a repository change at all, and whether editing files also permits committing, pushing, or opening a pull request. The second is the durable architectural intent recorded in `adr/`. The third is independence: an implementer reading its own diff re-applies the assumptions that produced it, so a change that is architecturally significant, security-sensitive, or expensive to reverse is judged by a context that did not write it. Which context that is — a subagent, another session, or the user — is left to the model.
-
-The result is deliberately a set of minimum interaction and engineering invariants, not a workflow engine. It aims to reduce dangerous differences between models while preserving the intelligence, flexibility, and efficiency of the model running it.
-
-## Verification
-
-Run the package checks:
+## Development
 
 ```sh
 ./scripts/check.sh
 ```
-
-They validate skill metadata and visibility intent, required resources, the forward-test catalog schema, ADR structure and index consistency, ADR-to-source enforcement checks, removal of obsolete installation paths, and standard installation documentation. They do not execute an LLM or prove behavioral compliance beyond the declared mechanical checks. The scenario catalog is intended for independent forward tests across models, where success is judged by preserved intent and safety rather than identical wording, question counts, or agent counts.
-
-## Releases
-
-The current release is `1.0.0`. Future versions are managed by Release Please from Conventional Commit messages on `main`:
-
-- `fix:` proposes a patch release.
-- `feat:` proposes a minor release.
-- `feat!:` or a `BREAKING CHANGE:` footer proposes a major release.
-
-Release Please maintains a release pull request containing the version and changelog update. Merging that pull request creates the corresponding Git tag and GitHub Release. Commits that do not describe a user-visible release, such as `docs:`, `test:`, or `chore:`, do not force a version bump by themselves.
-
-## Limits
-
-This package is a soft instruction layer, not a runtime security boundary. Harnesses may expose internal skills, deny tools or credentials, or choose not to activate an implicit dependency. Git and remote delivery also depend on the repository, worktree, authentication, and active instructions. When the workflow cannot safely continue, it reports the last completed phase and exact blocker rather than claiming completion.
-
-See [compatibility notes](docs/COMPATIBILITY.md) for current harness behavior and portability constraints.

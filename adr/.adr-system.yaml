@@ -1,2 +1,15 @@
-schema: maintain-architecture-decisions
-version: 2
+schema: semantic-living-adr
+version: 1
+checks:
+  package-contract:
+    argv:
+      - "{python}"
+      - -m
+      - unittest
+      - tests.test_package.PackageStructureTests
+  adr-tool-contract:
+    argv:
+      - "{python}"
+      - -m
+      - unittest
+      - tests.test_adr.AdrSchemaContractTests

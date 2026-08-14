@@ -7,6 +7,7 @@ import argparse
 import os
 import re
 import stat
+import subprocess
 import sys
 import tempfile
 from datetime import date
@@ -24,10 +25,9 @@ except ImportError:
 
 
 STATUSES = {"proposed", "accepted", "superseded", "retired"}
-ENFORCEMENT_EXCEPTION_STATUSES = {"manual", "not-applicable", "deferred"}
 SYSTEM_MARKER = ".adr-system.yaml"
-SYSTEM_NAME = "maintain-architecture-decisions"
-SYSTEM_VERSION = 2
+SYSTEM_NAME = "semantic-living-adr"
+SYSTEM_VERSION = 1
 RELATION_FIELDS = ("constrains", "depends_on", "supersedes", "superseded_by")
 REQUIRED_FIELDS = (
     "id",
@@ -38,6 +38,7 @@ REQUIRED_FIELDS = (
     "summary",
     *RELATION_FIELDS,
     "last_reviewed",
+    "invariants",
     "enforcement",
 )
 REQUIRED_SECTIONS = (
@@ -62,7 +63,8 @@ TEMPLATE_PLACEHOLDERS = (
     "List observable conditions that justify reopening the decision.",
 )
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$")
-ENFORCEMENT_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
+INVARIANT_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
+CHECK_ID_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
 SCOPE_PATTERN = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -175,26 +177,47 @@ def atomic_write(path: Path, content: str) -> None:
 
 
 def marker_data() -> dict[str, Any]:
-    return {"schema": SYSTEM_NAME, "version": SYSTEM_VERSION}
+    return {"schema": SYSTEM_NAME, "version": SYSTEM_VERSION, "checks": {}}
 
 
-def validate_marker(adr_root: Path) -> None:
+def validate_marker(adr_root: Path) -> dict[str, list[str]]:
     marker = adr_root / SYSTEM_MARKER
     if not marker.is_file():
         raise AdrError(
-            f"ADR ownership marker is missing: {marker}; refusing to adopt an existing directory"
+            f"ADR system marker is missing: {marker}; refusing to adopt an unmarked existing directory"
         )
     actual = load_yaml(marker)
-    compatible = (
-        isinstance(actual, dict)
-        and actual.get("schema") == SYSTEM_NAME
-        and type(actual.get("version")) is int
-        and actual.get("version") == SYSTEM_VERSION
-    )
-    if not compatible:
+    if isinstance(actual, dict) and actual.get("schema") == "maintain-architecture-decisions" and actual.get("version") == 2:
         raise AdrError(
-            f"ADR ownership marker/version conflict in {marker}: expected {marker_data()!r}"
+            "legacy ADR schema detected: maintain-architecture-decisions version 2\n"
+            "do not update the marker alone; this migration requires semantic review of every "
+            "accepted invariant and enforcement entry\n"
+            "use the updated architect workflow and its migrate-legacy-v2 playbook"
         )
+    if not isinstance(actual, dict) or actual.get("schema") != SYSTEM_NAME or actual.get("version") != SYSTEM_VERSION:
+        raise AdrError(
+            f"ADR system marker/version conflict in {marker}: expected schema {SYSTEM_NAME!r} version {SYSTEM_VERSION}"
+        )
+    if set(actual) != {"schema", "version", "checks"}:
+        raise AdrError(f"ADR system marker must contain only schema, version, and checks: {marker}")
+    checks = actual["checks"]
+    if not isinstance(checks, dict):
+        raise AdrError(f"ADR check registry must be a mapping: {marker}")
+    parsed: dict[str, list[str]] = {}
+    for check_id, config in checks.items():
+        if not isinstance(check_id, str) or not CHECK_ID_PATTERN.fullmatch(check_id):
+            raise AdrError(f"invalid ADR registry check id in {marker}: {check_id!r}")
+        if not isinstance(config, dict) or set(config) != {"argv"}:
+            raise AdrError(f"ADR registry check must contain only argv in {marker}: {check_id}")
+        argv = config["argv"]
+        if not isinstance(argv, list) or not argv or not all(
+            isinstance(arg, str) and arg and "\x00" not in arg for arg in argv
+        ):
+            raise AdrError(f"ADR registry check argv must be a non-empty string list in {marker}: {check_id}")
+        if any(arg == "check" for arg in argv) and any(Path(arg).name == "adr" for arg in argv):
+            raise AdrError(f"ADR registry check may not recursively invoke adr check: {check_id}")
+        parsed[check_id] = argv
+    return parsed
 
 
 def init_repository(root: Path) -> None:
@@ -281,68 +304,65 @@ def parse_record(path: Path, adr_root: Path) -> dict[str, Any]:
         if decision_id in value:
             raise AdrError(f"{field} cannot reference the record itself in {path}")
 
+    invariants = data["invariants"]
+    if not isinstance(invariants, list):
+        raise AdrError(f"invariants must be a list in {path}")
+    invariant_ids: set[str] = set()
+    for invariant in invariants:
+        if not isinstance(invariant, dict) or set(invariant) != {"id", "statement"}:
+            raise AdrError(f"each invariant must contain only id and statement in {path}")
+        invariant_id = invariant["id"]
+        if not isinstance(invariant_id, str) or not INVARIANT_ID_PATTERN.fullmatch(invariant_id):
+            raise AdrError(f"invalid invariant id in {path}: {invariant_id!r}")
+        if invariant_id in invariant_ids:
+            raise AdrError(f"duplicate invariant id in {path}: {invariant_id}")
+        invariant_ids.add(invariant_id)
+        if not isinstance(invariant["statement"], str) or not invariant["statement"].strip():
+            raise AdrError(f"invariant statement must be non-empty in {path}: {invariant_id}")
+
     enforcement = data["enforcement"]
     if not isinstance(enforcement, list):
         raise AdrError(f"enforcement must be a list in {path}")
-    enforcement_ids: set[str] = set()
-    for check in enforcement:
-        if not isinstance(check, dict):
-            raise AdrError(f"each enforcement check must be a mapping in {path}")
-        if set(check) - {"id", "path", "must_contain", "must_not_contain"}:
-            unexpected = sorted(set(check) - {"id", "path", "must_contain", "must_not_contain"})
-            raise AdrError(f"unknown enforcement fields in {path}: {', '.join(unexpected)}")
-        check_id = check.get("id")
-        if not isinstance(check_id, str) or not ENFORCEMENT_ID_PATTERN.fullmatch(check_id):
-            raise AdrError(f"invalid enforcement check id in {path}: {check_id!r}")
-        if check_id in enforcement_ids:
-            raise AdrError(f"duplicate enforcement check id in {path}: {check_id}")
-        enforcement_ids.add(check_id)
-        target = check.get("path")
-        if not isinstance(target, str) or not target.strip() or "\x00" in target:
-            raise AdrError(f"enforcement path must be a non-empty string in {path}")
-        target_path = Path(target)
-        if target_path.is_absolute() or ".." in target_path.parts:
-            raise AdrError(f"enforcement path must stay inside the repository in {path}: {target!r}")
-        for field in ("must_contain", "must_not_contain"):
-            assertions = check.get(field, [])
-            if not isinstance(assertions, list) or not all(
-                isinstance(item, str) and item for item in assertions
-            ):
-                raise AdrError(f"{field} must be a string list in enforcement check {check_id} of {path}")
-            if len(assertions) != len(set(assertions)):
-                raise AdrError(f"{field} contains duplicates in enforcement check {check_id} of {path}")
-        if not check.get("must_contain") and not check.get("must_not_contain"):
-            raise AdrError(f"enforcement check has no assertions in {path}: {check_id}")
-        overlap = set(check.get("must_contain", [])) & set(check.get("must_not_contain", []))
-        if overlap:
-            raise AdrError(f"enforcement check asserts both presence and absence in {path}: {check_id}")
+    covered: set[str] = set()
+    for entry in enforcement:
+        if not isinstance(entry, dict):
+            raise AdrError(f"each enforcement entry must be a mapping in {path}")
+        invariant_id = entry.get("invariant")
+        if not isinstance(invariant_id, str) or invariant_id not in invariant_ids:
+            raise AdrError(f"enforcement references unknown invariant in {path}: {invariant_id!r}")
+        if invariant_id in covered:
+            raise AdrError(f"invariant has multiple enforcement entries in {path}: {invariant_id}")
+        covered.add(invariant_id)
+        kind = entry.get("kind")
+        if kind == "executable":
+            if set(entry) != {"invariant", "kind", "check"}:
+                raise AdrError(f"executable enforcement must contain invariant, kind, and check in {path}: {invariant_id}")
+            check_id = entry["check"]
+            if not isinstance(check_id, str) or not CHECK_ID_PATTERN.fullmatch(check_id):
+                raise AdrError(f"invalid registered check id in {path}: {check_id!r}")
+        elif kind == "manual":
+            expected = {"invariant", "kind", "reason", "evidence", "revisit_when"}
+            if set(entry) != expected:
+                raise AdrError(f"manual enforcement must contain invariant, kind, reason, evidence, and revisit_when in {path}: {invariant_id}")
+            if not isinstance(entry["reason"], str) or not entry["reason"].strip():
+                raise AdrError(f"manual enforcement reason must be non-empty in {path}: {invariant_id}")
+            for field in ("evidence", "revisit_when"):
+                values = entry[field]
+                if not isinstance(values, list) or not values or not all(
+                    isinstance(item, str) and item.strip() for item in values
+                ):
+                    raise AdrError(f"manual enforcement {field} must be a non-empty string list in {path}: {invariant_id}")
+        else:
+            raise AdrError(f"invalid enforcement kind in {path}: {kind!r}")
 
-    exception = data.get("enforcement_exception")
-    if exception is not None:
-        if not isinstance(exception, dict):
-            raise AdrError(f"enforcement_exception must be a mapping or null in {path}")
-        allowed_exception_fields = {"status", "reason", "evidence", "revisit_when"}
-        unexpected = set(exception) - allowed_exception_fields
-        if unexpected:
-            raise AdrError(
-                f"unknown enforcement_exception fields in {path}: {', '.join(sorted(unexpected))}"
-            )
-        exception_status = exception.get("status")
-        if exception_status not in ENFORCEMENT_EXCEPTION_STATUSES:
-            raise AdrError(
-                f"invalid enforcement_exception status in {path}: {exception_status!r}"
-            )
-        if not isinstance(exception.get("reason"), str) or not exception["reason"].strip():
-            raise AdrError(f"enforcement_exception reason must be non-empty in {path}")
-        for field in ("evidence", "revisit_when"):
-            values = exception.get(field)
-            if not isinstance(values, list) or not all(
-                isinstance(item, str) and item.strip() for item in values
-            ):
-                raise AdrError(
-                    f"enforcement_exception {field} must be a non-empty string list in {path}"
-                )
-    data["enforcement_exception"] = exception
+    if status == "accepted":
+        if not invariant_ids:
+            raise AdrError(f"accepted ADR must declare invariants in {path}")
+        uncovered = invariant_ids - covered
+        if uncovered:
+            raise AdrError(f"accepted ADR has unenforced invariants in {path}: {', '.join(sorted(uncovered))}")
+    elif covered != invariant_ids:
+        raise AdrError(f"every declared invariant must have enforcement in {path}")
 
     reviewed = data["last_reviewed"]
     if isinstance(reviewed, date):
@@ -483,12 +503,11 @@ def build_index(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
                 "superseded_by": record["superseded_by"],
                 "last_reviewed": record["last_reviewed"],
                 "enforcement": record["enforcement"],
-                "enforcement_exception": record["enforcement_exception"],
             }
         )
     return {
+        "schema": "semantic-living-adr-index",
         "version": 1,
-        "generated_by": "maintain-architecture-decisions",
         "decisions": decisions,
     }
 
@@ -532,70 +551,52 @@ def validate_repository(root: Path) -> None:
 def enforce_repository(root: Path) -> None:
     resolved_root = root.resolve()
     adr_root, records, expected_index = records_and_index(resolved_root)
+    registry = validate_marker(adr_root)
     actual_index = load_yaml(adr_root / "index.yaml")
     if actual_index != expected_index:
         raise AdrError(f"stale index: run reindex for {adr_root / 'index.yaml'}")
-    total_checks = 0
-    total_exceptions = 0
+
+    references: dict[str, list[str]] = {}
+    manual: list[str] = []
     for decision_id, record in sorted(records.items()):
         if record["status"] != "accepted":
             continue
-        checks = record["enforcement"]
-        exception = record["enforcement_exception"]
-        if not checks:
-            if exception is None:
-                raise AdrError(f"accepted ADR has no enforcement checks or declared exception: {decision_id}")
-            total_exceptions += 1
+        for entry in record["enforcement"]:
+            invariant = f"{decision_id}/{entry['invariant']}"
+            if entry["kind"] == "manual":
+                manual.append(invariant)
+                continue
+            check_id = entry["check"]
+            if check_id not in registry:
+                raise AdrError(f"accepted invariant references unregistered check: {invariant} -> {check_id}")
+            references.setdefault(check_id, []).append(invariant)
+
+    failures: list[str] = []
+    for check_id, invariants in sorted(references.items()):
+        argv = [sys.executable if arg == "{python}" else arg for arg in registry[check_id]]
+        print(f"check: running {check_id}: {argv!r}")
+        try:
+            result = subprocess.run(argv, cwd=resolved_root, text=True, capture_output=True, check=False)
+        except OSError as error:
+            failures.append(f"{check_id}: could not execute: {error}")
             continue
-        if exception is not None:
-            raise AdrError(
-                f"ADR cannot declare both enforcement checks and an exception: {decision_id}"
-            )
-        for check in checks:
-            total_checks += 1
-            target = check["path"]
-            matches = sorted(resolved_root.glob(target))
-            files = []
-            for match in matches:
-                if match.is_symlink():
-                    raise AdrError(
-                        f"enforcement target is a symlink: {decision_id}/{check['id']}: {match}"
-                    )
-                if match.is_file():
-                    try:
-                        match.resolve().relative_to(resolved_root)
-                    except ValueError as error:
-                        raise AdrError(
-                            f"enforcement target escapes repository: {decision_id}/{check['id']}: {match}"
-                        ) from error
-                    files.append(match)
-            if not files:
-                raise AdrError(
-                    f"enforcement target matched no files: {decision_id}/{check['id']}: {target}"
-                )
-            for path in files:
-                try:
-                    content = path.read_text(encoding="utf-8")
-                except UnicodeDecodeError as error:
-                    raise AdrError(
-                        f"enforcement target is not UTF-8 text: {decision_id}/{check['id']}: {path}"
-                    ) from error
-                for expected in check.get("must_contain", []):
-                    if expected not in content:
-                        raise AdrError(
-                            f"enforcement failed: {decision_id}/{check['id']} requires {expected!r} in {path}"
-                        )
-                for forbidden in check.get("must_not_contain", []):
-                    if forbidden in content:
-                        raise AdrError(
-                            f"enforcement failed: {decision_id}/{check['id']} forbids {forbidden!r} in {path}"
-                        )
-    if total_exceptions:
-        label = "exception" if total_exceptions == 1 else "exceptions"
-        suffix = f", {total_exceptions} declared {label}"
-    else:
-        suffix = ""
-    print(f"check: ok ({total_checks} enforcement checks{suffix})")
+        if result.stdout:
+            print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+        if result.stderr:
+            print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr)
+        if result.returncode != 0:
+            affected = ", ".join(sorted(invariants))
+            failures.append(f"{check_id}: exited {result.returncode}; covers {affected}")
+
+    if failures:
+        raise AdrError("enforcement failed:\n- " + "\n- ".join(failures))
+    for invariant in sorted(manual):
+        print(f"check: manual (not mechanically verified): {invariant}")
+    print(
+        f"check: ok ({len(references)} executable checks, "
+        f"{len(manual)} manual invariants not mechanically verified)"
+    )
+
 
 def parser() -> argparse.ArgumentParser:
     command_parser = argparse.ArgumentParser(description=__doc__)

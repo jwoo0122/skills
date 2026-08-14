@@ -1,37 +1,32 @@
 # Decision policy
 
-## Record durable intent
+`adr/` is repository-owned architecture data. This skill is one reference client, not an exclusive writer or semantic authority. Another model or tool may maintain the records and replace the checker when it preserves the self-described data and conformance contract in `adr/README.md`.
 
-Record a decision when both conditions hold:
+## What belongs in ADRs
 
-1. It constrains future changes across a boundary, owner, protocol, data lifecycle, security property, infrastructure choice, or system-wide quality attribute.
-2. A capable future agent could not reliably reconstruct the intended constraint by inspecting the code alone.
+Record a decision when it is durable, constrains future work, and is not obvious from implementation and tests alone. Typical examples establish authority or ownership, contracts, compatibility, security or privacy boundaries, data lifecycle, failure semantics, or expensive-to-reverse constraints.
 
-Question size and diff size are not criteria. A one-line authority change can require an ADR; a large mechanical migration can merely reference one.
+Do not record local reversible implementation choices, routine use of established conventions, implementation logs, speculative alternatives, or facts already expressed completely by code and tests.
 
-## Preserve stable questions
+## Semantic maintenance
 
-Each record owns one stable question. Prefer improving or revising that record over adding another document. Create a new semantic ID only when a new question appears or an old question must be split or merged.
+- One stable design question has one owning record.
+- Improve prose without changing intent as `improve`.
+- Change the current answer as `revise` and record the new rationale.
+- Use `supersede` only when question boundaries change; maintain both relationship directions.
+- Use `retire` when no successor decision is needed.
+- Do not preserve obsolete instructions as accepted history.
 
-Use these statuses:
+## Evidence precedence
 
-- `proposed`: an explicit candidate not yet authoritative.
-- `accepted`: current intent that implementations must respect.
-- `superseded`: replaced by one or more linked records.
-- `retired`: no longer applicable because its context disappeared.
+A current explicit user decision can revise accepted intent. Accepted ADR intent outranks accidental source state. Source and tests are evidence and may show that an ADR is stale, but drift alone does not authorize rewriting the decision.
 
-For supersession, populate `supersedes` on the replacement and `superseded_by` on the replaced record. Keep both relations consistent. A chain may retain `superseded` intermediate records, but every terminal replacement must be `accepted`; a `proposed` or `retired` record cannot displace current intent.
+## Enforcement quality
 
-## Write useful content
+Each accepted invariant has a stable ID and exactly one enforcement mapping.
 
-- Phrase the current decision and invariants normatively.
-- Record only alternatives future agents are likely to reconsider.
-- Name tests, linters, schemas, or review points that enforce the decision.
-- For accepted records, declare at least one repository-relative `enforcement` check when a deterministic source assertion is available. Use `must_contain` and `must_not_contain` for explicit tokens, and keep behavioral meaning in tests or other executable checks.
-- When deterministic enforcement is not appropriate, declare `enforcement_exception` with `manual`, `not-applicable`, or `deferred` status, a concrete reason, evidence, and observable revisit conditions. Never leave an accepted ADR silently unenforced.
-- State observable conditions that justify reopening the decision.
-- Keep implementation narration and chronological meeting notes out of the record.
+Prefer checks that parse structure, inspect dependency graphs, exercise public contracts and negative cases, validate schemas, apply migrations in disposable environments, or otherwise observe the property claimed by the invariant. A file substring usually proves only that text exists, not that behavior conforms.
 
-## Resolve conflicts
+Use `manual` only when deterministic portable verification is genuinely unavailable. State why, identify inspectable evidence, and name conditions that should trigger automation. Manual invariants pass structural CI but are always reported as not mechanically verified.
 
-When code conflicts with an accepted record, determine whether the code is wrong or the intent changed. Fix code when the record still represents the user's intent. Revise or supersede the ADR only after the changed intent is established. If neither is supported, return `clarify` rather than choosing silently.
+Registry commands live in `adr/.adr-system.yaml` as argv arrays. The exact token `{python}` resolves to the compatible interpreter running the ADR tool. They run without a shell, once per check ID, with the repository root as working directory. They must be non-interactive and must not recursively invoke `adr check`. Environment preparation and dependency installation belong to the repository's CI or build tooling, not the ADR checker.

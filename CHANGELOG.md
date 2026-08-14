@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.0.0](https://github.com/jwoo0122/skills/compare/v2.0.0...v3.0.0) (2026-08-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* replace workflow with architect and executable ADR checks ([#8](https://github.com/jwoo0122/skills/issues/8))
+
+### Features
+
+* group workflow skills for installation ([#6](https://github.com/jwoo0122/skills/issues/6)) ([b477c6d](https://github.com/jwoo0122/skills/commit/b477c6dcd7dca98b42123a5e66253dcb4ccc9de1))
+* replace workflow with architect and executable ADR checks ([#8](https://github.com/jwoo0122/skills/issues/8)) ([0d050ac](https://github.com/jwoo0122/skills/commit/0d050ace5bd6b6723d2f30686fc8990ba7912388))
+
 ## [3.0.0] (2026-08-15)
 
 ### ⚠ BREAKING CHANGES

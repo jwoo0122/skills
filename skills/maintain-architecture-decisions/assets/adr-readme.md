@@ -1,18 +1,28 @@
 # Architecture decisions
 
-This directory is a semantic living map of current architectural intent, not a chronological log.
+This directory is repository-owned architecture data. It is not owned by a particular model, skill, or checker. Any model or tool may maintain it if the resulting repository preserves this contract. The tool that initialized the directory is only a reference client.
 
-- Use `index.yaml` to route to relevant records; do not load every ADR by default.
-- Keep one record per stable design question and revise it when the answer changes.
-- Every accepted invariant has exactly one `executable` or `manual` enforcement entry.
-- Executable entries reference argv commands registered in `.adr-system.yaml`.
-- Manual entries require reason, evidence, and revisit conditions and are reported as not mechanically verified.
-- Keep supersession relationships bidirectional and use one logical ADR writer.
+## Data model
 
-```sh
-skills/maintain-architecture-decisions/scripts/adr reindex --root .
-skills/maintain-architecture-decisions/scripts/adr validate --root .
-skills/maintain-architecture-decisions/scripts/adr check --root .
-```
+- `.adr-system.yaml` identifies the `semantic-living-adr` protocol version and registers executable checks as argv arrays.
+- `index.yaml` is a deterministic generated routing map; records are authoritative when it is stale.
+- `records/<scope>/<stable-question>.md` owns one stable design question.
+- `_template.md` defines record frontmatter and required prose sections.
+- Records are revised as current intent changes rather than appended as chronology.
+- Decision relationships refer to semantic record IDs, and supersession is bidirectional.
+- Record IDs use `<scope>.<stable-question>` with lowercase letters, digits, dots, and hyphens; the file path is `records/<id with dots as slashes>.md`.
+- Status is `proposed`, `accepted`, `superseded`, or `retired`. Only accepted records impose current constraints.
+- Required frontmatter fields are listed in `_template.md`.
 
-`check` includes structural validation and runs each referenced executable registry check once. It must pass globally before and after repository changes and can be used directly in CI.
+## Accepted-record contract
+
+Every accepted record declares stable invariants and maps each exactly once to:
+
+- `executable`: a deterministic registered check; or
+- `manual`: a reason, inspectable evidence, and a condition for reconsidering automation.
+
+Manual invariants are not mechanically verified. Source-string presence alone is not proof of architectural conformance.
+
+Use `index.yaml` to select relevant records. Prefer revising the record that owns an existing question. Keep one logical writer during a change to avoid conflicting edits; this is a concurrency rule, not tool ownership.
+
+A conforming implementation validates structure and relationships, generates the index deterministically, checks complete invariant coverage, executes each referenced check once from the repository root without a shell, and reports manual invariants honestly. Repositories should expose their chosen implementation through a stable repository-level command for agents and CI.

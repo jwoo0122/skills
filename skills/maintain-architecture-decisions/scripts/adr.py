@@ -26,8 +26,8 @@ except ImportError:
 
 STATUSES = {"proposed", "accepted", "superseded", "retired"}
 SYSTEM_MARKER = ".adr-system.yaml"
-SYSTEM_NAME = "maintain-architecture-decisions"
-SYSTEM_VERSION = 3
+SYSTEM_NAME = "semantic-living-adr"
+SYSTEM_VERSION = 1
 RELATION_FIELDS = ("constrains", "depends_on", "supersedes", "superseded_by")
 REQUIRED_FIELDS = (
     "id",
@@ -184,12 +184,12 @@ def validate_marker(adr_root: Path) -> dict[str, list[str]]:
     marker = adr_root / SYSTEM_MARKER
     if not marker.is_file():
         raise AdrError(
-            f"ADR ownership marker is missing: {marker}; refusing to adopt an existing directory"
+            f"ADR system marker is missing: {marker}; refusing to adopt an unmarked existing directory"
         )
     actual = load_yaml(marker)
     if not isinstance(actual, dict) or actual.get("schema") != SYSTEM_NAME or actual.get("version") != SYSTEM_VERSION:
         raise AdrError(
-            f"ADR ownership marker/version conflict in {marker}: expected schema {SYSTEM_NAME!r} version {SYSTEM_VERSION}"
+            f"ADR system marker/version conflict in {marker}: expected schema {SYSTEM_NAME!r} version {SYSTEM_VERSION}"
         )
     if set(actual) != {"schema", "version", "checks"}:
         raise AdrError(f"ADR system marker must contain only schema, version, and checks: {marker}")
@@ -499,8 +499,8 @@ def build_index(records: dict[str, dict[str, Any]]) -> dict[str, Any]:
             }
         )
     return {
+        "schema": "semantic-living-adr-index",
         "version": 1,
-        "generated_by": "maintain-architecture-decisions",
         "decisions": decisions,
     }
 

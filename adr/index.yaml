@@ -1,5 +1,5 @@
+schema: semantic-living-adr-index
 version: 1
-generated_by: maintain-architecture-decisions
 decisions:
   - id: architecture.living-decisions
     status: accepted
@@ -42,6 +42,9 @@ decisions:
       - invariant: meaningful-conformance
         kind: executable
         check: adr-tool-contract
+      - invariant: repository-owned-protocol
+        kind: executable
+        check: package-contract
       - invariant: portable-launcher
         kind: executable
         check: adr-tool-contract

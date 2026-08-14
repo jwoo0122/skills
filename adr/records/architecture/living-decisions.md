@@ -27,8 +27,10 @@ invariants:
     statement: "Manual invariants are structurally complete and reported as not mechanically verified."
   - id: meaningful-conformance
     statement: "General source substring assertions are not an ADR enforcement mechanism."
+  - id: repository-owned-protocol
+    statement: "ADR data and conformance belong to the repository; the bundled skill and checker are replaceable reference clients."
   - id: portable-launcher
-    statement: "ADR tooling uses an existing compatible interpreter and never installs dependencies."
+    statement: "The reference ADR tooling uses an existing compatible interpreter and never installs dependencies."
 enforcement:
   - invariant: semantic-living-map
     kind: manual
@@ -52,6 +54,9 @@ enforcement:
   - invariant: meaningful-conformance
     kind: executable
     check: adr-tool-contract
+  - invariant: repository-owned-protocol
+    kind: executable
+    check: package-contract
   - invariant: portable-launcher
     kind: executable
     check: adr-tool-contract
@@ -65,9 +70,9 @@ How should durable architectural intent remain discoverable, revisable, and veri
 
 ## Current decision
 
-The repository maintains `adr/` as a semantic living decision map. Each record owns a stable question. Accepted records declare stable invariant IDs, and each invariant is connected exactly once to either a centrally registered executable check or an explicit manual entry with reason, evidence, and revisit conditions.
+The repository owns `adr/` as a semantic living decision map. The data and conformance contract are independent of any particular model, skill, or checker. The bundled skill and checker are replaceable reference clients. Each record owns a stable question. Accepted records declare stable invariant IDs, and each invariant is connected exactly once to either a centrally registered executable check or an explicit manual entry with reason, evidence, and revisit conditions.
 
-`adr check` validates the complete system and executes every referenced argv-based check once from the repository root without a shell. The exact `{python}` argv token resolves to the compatible interpreter selected by the launcher. It reports manual invariants as not mechanically verified. Source substring assertions are not a general conformance mechanism.
+The repository-level `scripts/adr check` interface validates the complete system and executes every referenced argv-based check once from the repository root without a shell. The exact `{python}` argv token resolves to the compatible interpreter selected by the launcher. It reports manual invariants as not mechanically verified. Source substring assertions are not a general conformance mechanism.
 
 ## Context and forces
 
@@ -81,7 +86,8 @@ Code reveals implementation but often not why a boundary or trade-off must persi
 - `executable-registry`: Executable enforcement references an argv-only central registry and each referenced check runs once without a shell.
 - `honest-manual-status`: Manual invariants are structurally complete and reported as not mechanically verified.
 - `meaningful-conformance`: General source substring assertions are not an ADR enforcement mechanism.
-- `portable-launcher`: ADR tooling uses an existing compatible interpreter and never installs dependencies.
+- `repository-owned-protocol`: ADR data and conformance belong to the repository; the bundled skill and checker are replaceable reference clients.
+- `portable-launcher`: The reference ADR tooling uses an existing compatible interpreter and never installs dependencies.
 
 ## Alternatives and trade-offs
 
@@ -89,11 +95,11 @@ Embedding arbitrary shell commands in each ADR is flexible but unsafe, duplicate
 
 ## Consequences
 
-CI can run one global architecture command that invokes meaningful repository-owned checks. Adding accepted invariants requires explicit coverage. Manual claims remain visible debt rather than silently passing as machine proof.
+CI and agents can use a stable repository-level interface while the underlying conforming implementation remains replaceable. The current reference client runs meaningful repository-owned checks. Adding accepted invariants requires explicit coverage. Manual claims remain visible debt rather than silently passing as machine proof.
 
 ## Enforcement
 
-The ADR tool contract exercises schema rejection, complete coverage, registry validation, command execution, deduplication, failure attribution, and manual reporting. The package contract exercises the repository's selected architectural surface. The launcher tests verify interpreter selection without installation.
+The package contract verifies that `adr/` states its repository ownership and exposes a repository-level command. The ADR tool contract exercises schema rejection, complete coverage, registry validation, command execution, deduplication, failure attribution, and manual reporting. The package contract exercises the repository's selected architectural surface. The launcher tests verify interpreter selection without installation.
 
 ## Revisit when
 

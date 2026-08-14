@@ -1,5 +1,7 @@
 # Decision policy
 
+`adr/` is repository-owned architecture data. This skill is one reference client, not an exclusive writer or semantic authority. Another model or tool may maintain the records and replace the checker when it preserves the self-described data and conformance contract in `adr/README.md`.
+
 ## What belongs in ADRs
 
 Record a decision when it is durable, constrains future work, and is not obvious from implementation and tests alone. Typical examples establish authority or ownership, contracts, compatibility, security or privacy boundaries, data lifecycle, failure semantics, or expensive-to-reverse constraints.

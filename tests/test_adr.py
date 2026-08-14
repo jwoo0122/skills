@@ -11,6 +11,9 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills" / "maintain-architecture-decisions" / "scripts" / "adr.py"
 LAUNCHER = ROOT / "skills" / "maintain-architecture-decisions" / "scripts" / "adr"
+REPOSITORY_LAUNCHER = ROOT / "scripts" / "adr"
+
+
 class AdrTestCase(unittest.TestCase):
     def run_cli(self, command: str, root: Path, expected: int = 0):
         result = subprocess.run(
@@ -50,7 +53,7 @@ class AdrTestCase(unittest.TestCase):
         (adr / "_template.md").write_text("# template\n", encoding="utf-8")
         checks_yaml = "checks: {}\n" if registry.strip() == "{}" else "checks:\n" + registry
         (adr / ".adr-system.yaml").write_text(
-            "schema: maintain-architecture-decisions\nversion: 3\n" + checks_yaml,
+            "schema: semantic-living-adr\nversion: 1\n" + checks_yaml,
             encoding="utf-8",
         )
         invariants_yaml = "invariants: []\n" if invariants.strip() == "[]" else "invariants:\n" + invariants
@@ -164,7 +167,7 @@ class AdrSchemaContractTests(AdrTestCase):
         recursive = """\
   contract:
     argv:
-      - skills/maintain-architecture-decisions/scripts/adr
+      - scripts/adr
       - check
 """
         with tempfile.TemporaryDirectory() as directory:
@@ -261,7 +264,7 @@ class AdrSchemaContractTests(AdrTestCase):
             index = root / "adr" / "index.yaml"
             index.write_text(
                 index.read_text(encoding="utf-8").replace(
-                    "generated_by: maintain-architecture-decisions", "generated_by: stale-generator"
+                    "schema: semantic-living-adr-index", "schema: stale-index"
                 ),
                 encoding="utf-8",
             )
@@ -274,6 +277,19 @@ class AdrLauncherTests(AdrTestCase):
         if python is not None:
             env["ADR_PYTHON"] = python
         return subprocess.run([str(LAUNCHER), *arguments], text=True, capture_output=True, env=env, check=False)
+
+    def test_repository_interface_delegates_to_current_reference_client(self) -> None:
+        env = os.environ.copy()
+        env["ADR_PYTHON"] = sys.executable
+        result = subprocess.run(
+            [str(REPOSITORY_LAUNCHER), "validate", "--root", str(ROOT)],
+            text=True,
+            capture_output=True,
+            env=env,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("validate: ok (4 records)", result.stdout)
 
     def test_launcher_selects_explicit_compatible_python(self) -> None:
         result = self.run_launcher("--print-python", python=sys.executable)
@@ -343,8 +359,13 @@ class AdrLauncherTests(AdrTestCase):
             root = Path(directory)
             self.run_cli("init", root)
             marker = (root / "adr" / ".adr-system.yaml").read_text(encoding="utf-8")
-            self.assertIn("version: 3", marker)
+            self.assertIn("schema: semantic-living-adr", marker)
+            self.assertIn("version: 1", marker)
             self.assertIn("checks: {}", marker)
+            generated_readme = (root / "adr" / "README.md").read_text(encoding="utf-8")
+            generated_index = (root / "adr" / "index.yaml").read_text(encoding="utf-8")
+            self.assertIn("repository-owned architecture data", generated_readme)
+            self.assertIn("schema: semantic-living-adr-index", generated_index)
             self.run_cli("validate", root)
 
 

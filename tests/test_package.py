@@ -56,6 +56,17 @@ class PackageStructureTests(unittest.TestCase):
         architect = yaml.safe_load((SKILLS / "architect" / "agents" / "openai.yaml").read_text(encoding="utf-8"))
         self.assertIn("$architect", architect["interface"]["default_prompt"])
 
+    def test_adr_contract_is_repository_owned_and_tool_neutral(self) -> None:
+        readme = (ROOT / "adr" / "README.md").read_text(encoding="utf-8")
+        marker = yaml.safe_load((ROOT / "adr" / ".adr-system.yaml").read_text(encoding="utf-8"))
+        index = yaml.safe_load((ROOT / "adr" / "index.yaml").read_text(encoding="utf-8"))
+        self.assertEqual("semantic-living-adr", marker["schema"])
+        self.assertEqual("semantic-living-adr-index", index["schema"])
+        self.assertNotIn("generated_by", index)
+        self.assertIn("repository-owned architecture data", readme)
+        self.assertIn("reference clients, not exclusive authorities", readme)
+        self.assertTrue((ROOT / "scripts" / "adr").is_file())
+
     def test_skill_documents_have_bounded_progressive_disclosure(self) -> None:
         for path in sorted(SKILLS.glob("*/SKILL.md")):
             lines = path.read_text(encoding="utf-8").splitlines()
@@ -98,7 +109,11 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual("./skills/", manifest["skills"])
 
     def test_scripts_are_executable(self) -> None:
-        for path in [ROOT / "scripts" / "check.sh", SKILLS / "maintain-architecture-decisions" / "scripts" / "adr"]:
+        for path in [
+            ROOT / "scripts" / "check.sh",
+            ROOT / "scripts" / "adr",
+            SKILLS / "maintain-architecture-decisions" / "scripts" / "adr",
+        ]:
             self.assertTrue(path.stat().st_mode & 0o111, path)
 
 

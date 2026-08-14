@@ -8,4 +8,6 @@ The package uses portable Agent Skills conventions:
 - OpenAI-facing metadata lives under `agents/openai.yaml`;
 - the Claude plugin manifest points at the whole `skills/` directory.
 
-The ADR launcher requires an existing Python interpreter with PyYAML and does not install dependencies. Registered ADR checks are repository-controlled argv arrays run without a shell from the repository root. CI is responsible for preparing their dependencies.
+The `adr/` format is repository-owned and independent of a particular skill implementation. This repository exposes `scripts/adr` as its stable agent and CI interface; it currently delegates to the bundled reference client and may be replaced by another conforming implementation.
+
+The reference client requires an existing Python interpreter with PyYAML and does not install dependencies. Registered ADR checks are repository-controlled argv arrays run without a shell from the repository root. CI is responsible for preparing their dependencies.

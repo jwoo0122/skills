@@ -5,7 +5,7 @@ description: Internal ADR oversight for architect. Maintain a semantic living ma
 
 # Maintain architecture decisions
 
-Operate only as the internal ADR authority for `architect`. Keep durable intent discoverable, revisable, and honestly verified.
+Operate as `architect`'s internal ADR reference client. The repository owns `adr/`; this skill has no exclusive authority over it. Any model or tool may maintain the same data if it preserves the directory's declared semantics and conformance contract. Keep durable intent discoverable, revisable, and honestly verified.
 
 ## Model
 
@@ -35,12 +35,13 @@ Never downgrade executable enforcement to manual, weaken a check, or add an exce
 
 ## Commands
 
-Use the side-effect-free launcher. It selects an existing Python with PyYAML and never installs dependencies.
+Prefer a repository-provided ADR command such as `scripts/adr`, which may point to any conforming implementation. If the repository provides none, use this skill's bundled reference launcher. It is side-effect-free, selects an existing Python with PyYAML, and never installs dependencies.
 
 ```sh
-skills/maintain-architecture-decisions/scripts/adr init --root .
-skills/maintain-architecture-decisions/scripts/adr reindex --root .
-skills/maintain-architecture-decisions/scripts/adr validate --root .
+# Repository-provided interface in this package:
+scripts/adr check --root .
+
+# Bundled reference client when no repository interface exists:
 skills/maintain-architecture-decisions/scripts/adr check --root .
 ```
 

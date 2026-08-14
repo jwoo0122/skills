@@ -88,6 +88,8 @@ If the user delegates design discretion, the model may choose ordinary design de
 
 An ADR belongs in the system when a decision is **durable**, **constrains future work**, and is **not obvious from code and tests alone**. Records own stable design questions and are revised as current intent changes; they are not an append-only implementation history.
 
+The `adr/` directory is repository-owned data, not the private output of these skills. Any model or tool may maintain it if it preserves the declared semantics and conformance contract. The bundled skill and checker are reference clients that can be replaced by a better implementation.
+
 Every accepted ADR invariant has exactly one enforcement status:
 
 - `executable`: references a deterministic argv-based check registered in `adr/.adr-system.yaml`;
@@ -95,13 +97,13 @@ Every accepted ADR invariant has exactly one enforcement status:
 
 Manual invariants are reported as **not mechanically verified**. A prose string appearing in a file is not treated as proof that the architecture is followed.
 
-Run the global gate with:
+Run the global gate through this repository's replaceable interface:
 
 ```sh
-skills/maintain-architecture-decisions/scripts/adr check --root .
+scripts/adr check --root .
 ```
 
-The command validates the ADR system and index, verifies complete invariant coverage, executes each referenced check once without a shell, and exits non-zero on failure. The same command can be used in CI.
+An installed skill can fall back to its bundled reference launcher when a target repository does not provide an ADR command. The command validates the ADR system and index, verifies complete invariant coverage, executes each referenced check once without a shell, and exits non-zero on failure. The same command can be used in CI.
 
 ## Install
 

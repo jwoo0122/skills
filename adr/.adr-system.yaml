@@ -1,5 +1,5 @@
-schema: maintain-architecture-decisions
-version: 3
+schema: semantic-living-adr
+version: 1
 checks:
   package-contract:
     argv:

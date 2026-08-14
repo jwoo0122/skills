@@ -1,2 +1,3 @@
 schema: maintain-architecture-decisions
-version: 2
+version: 3
+checks: {}

@@ -1,7 +1,7 @@
 {
   "name": "jwoo0122-skills",
   "version": "2.0.0",
-  "description": "Autonomous coding workflow skills for clarification, architecture decisions, implementation, and verification.",
+  "description": "Architecture-first repository workflow with living ADR conformance.",
   "author": {
     "name": "jwoo0122"
   },
@@ -12,9 +12,5 @@
     "coding-workflow",
     "architecture-decisions"
   ],
-  "skills": [
-    "./skills/clarify-and-plan",
-    "./skills/execute-to-pr",
-    "./skills/maintain-architecture-decisions"
-  ]
+  "skills": "./skills/"
 }

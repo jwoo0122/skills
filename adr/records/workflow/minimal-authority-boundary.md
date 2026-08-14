@@ -4,72 +4,98 @@ status: accepted
 scope: workflow
 decision_type: workflow
 applies_to:
-  - skills/clarify-and-plan/**
-  - skills/execute-to-pr/**
-summary: "Constrain authority, durable architectural intent, and the independence of evidence; leave execution tactics to the model."
+  - skills/architect/**
+summary: "Constrain user authority and global ADR conformance while leaving execution tactics to the model."
 constrains:
   - interaction.material-ambiguity-loop
   - architecture.living-decisions
 depends_on:
   - workflow.public-entrypoint
-supersedes:
-  - workflow.independent-facets
-  - execution.adaptive-delegation
+supersedes: []
 superseded_by: []
-last_reviewed: "2026-07-26"
+last_reviewed: "2026-08-15"
+invariants:
+  - id: exact-user-authority
+    statement: "Read, edit, commit, push, and PR authority are not inferred from one another."
+  - id: no-dedicated-execution-stage
+    statement: "The package has no fixed planning or execution stage."
+  - id: autonomous-execution-tactics
+    statement: "No fixed brief, phase sequence, delegation topology, review count, branch strategy, or PR ritual is required."
+  - id: global-adr-gate
+    statement: "When an ADR system exists, the global ADR check runs before and after every repository change and any failure blocks delivery."
+  - id: gate-does-not-expand-scope
+    statement: "A global gate failure does not itself authorize unrelated repairs."
 enforcement:
-  - id: authority-mode
-    path: skills/clarify-and-plan/SKILL.md
-    must_contain:
-      - "mode: read-only | change"
-      - "delivery_boundary: answer | plan | local-change | commit | draft-pr"
-      - "default to `local-change` without asking"
-  - id: independent-review
-    path: skills/execute-to-pr/SKILL.md
-    must_contain:
-      - "obtain a review from a context that did not write the change"
-      - "Never escalate `local-change` to commit"
+  - invariant: exact-user-authority
+    kind: manual
+    reason: "Authority is supplied by the live user interaction and cannot be inferred from repository files."
+    evidence:
+      - tests/scenarios.json#authority-boundary
+    revisit_when:
+      - "A harness exposes machine-verifiable user authority capabilities."
+  - invariant: no-dedicated-execution-stage
+    kind: executable
+    check: package-contract
+  - invariant: autonomous-execution-tactics
+    kind: manual
+    reason: "The model's chosen execution strategy depends on the live task and active harness."
+    evidence:
+      - tests/scenarios.json#adaptive-execution-tactics
+    revisit_when:
+      - "A portable harness can expose and evaluate execution-policy choices."
+  - invariant: global-adr-gate
+    kind: manual
+    reason: "Repository code can provide the gate, but only the live agent or CI can prove that it ran at both workflow boundaries."
+    evidence:
+      - tests/scenarios.json#pre-post-global-gate
+      - scripts/check.sh
+    revisit_when:
+      - "A harness exposes machine-verifiable lifecycle hooks for repository changes."
+  - invariant: gate-does-not-expand-scope
+    kind: manual
+    reason: "Whether a repair is related and authorized depends on task context."
+    evidence:
+      - tests/scenarios.json#unrelated-global-drift
+    revisit_when:
+      - "A harness exposes machine-verifiable task scope and mutation authorization."
 ---
 
-# Minimal authority boundary
+# Minimal authority and conformance boundary
 
 ## Decision question
 
-What must the workflow constrain, and what must it leave to the model running it?
+What must the workflow constrain, and what should remain under model judgment?
 
 ## Current decision
 
-The workflow MUST constrain exactly two things beyond the durable architectural intent that `architecture.living-decisions` already owns: the authority boundary of a request, and the independence of the evidence that a risky change is correct.
+The workflow constrains user authority, consequential design choices, durable ADR intent, and global ADR conformance. It leaves implementation, verification, delegation, review, Git, and delivery tactics to the model unless the user or active repository instructions constrain them.
 
-It MUST record `mode` as `read-only` or `change` and stop at the user's authorized `delivery_boundary` of `answer`, `plan`, `local-change`, `commit`, or `draft-pr`. It MUST obtain a review from a context that did not write the change when that change is architecturally significant, security-sensitive, or expensive to reverse. It MUST NOT prescribe an execution topology, a delegation policy, a reviewer count, or a routing table; those tactics belong to the model and the harness.
+When `adr/.adr-system.yaml` exists, the global `adr check` runs before and after every repository change. Any failure blocks delivery, even when unrelated to the requested diff. The failure does not grant authority to modify unrelated areas; ambiguous repair requires a scope or design question.
 
 ## Context and forces
 
-The superseded records described a four-facet router and an adaptive delegation policy. Both prescribed orchestration shape that a capable model already chooses well, and both were carried by dedicated skills whose prose restated general agent conduct. Two properties are different, because a model cannot supply either from its own judgment. Permission to edit files does not reveal whether the user authorized a commit, a push, or a pull request. An implementer reading its own diff is not independent evidence, however capable it is, because it re-applies the assumptions that produced the change.
+A capable model can adapt execution tactics better than a generic workflow state machine. It cannot manufacture user authority or safely treat an existing architecture conflict as irrelevant.
 
 ## Invariants
 
-- `mode` and `delivery_boundary` are recorded before any repository mutation.
-- A change request without explicit commit or remote authority defaults to local work without asking a delivery question or switching branches.
-- Permission to implement never implies permission to commit, push, or open a pull request.
-- Read-only work does not mutate the repository or `adr/`.
-- Request size alone never forces or suppresses clarification.
-- An architecturally significant, security-sensitive, or hard-to-reverse change is reviewed by a context that did not write it, regardless of diff size.
-- A reviewing context receives the brief, relevant ADRs, the raw diff, and verification evidence rather than the implementer's summary, and does not edit the files it judges.
-- Execution tactics, including whether to delegate bounded work and which context supplies the review, are left to the model and are not encoded as workflow policy.
+- `exact-user-authority`: Read, edit, commit, push, and PR authority are not inferred from one another.
+- `no-dedicated-execution-stage`: The package has no fixed planning or execution stage.
+- `autonomous-execution-tactics`: No fixed brief, phase sequence, delegation topology, review count, branch strategy, or PR ritual is required.
+- `global-adr-gate`: When an ADR system exists, the global ADR check runs before and after every repository change and any failure blocks delivery.
+- `gate-does-not-expand-scope`: A global gate failure does not itself authorize unrelated repairs.
 
 ## Alternatives and trade-offs
 
-Keeping the four-facet vocabulary preserved a shared description of routing, but `execution` and the `self`/`independent`/`multi-axis` scale produced no observable difference in behavior beyond what the authority boundary, the ADR gate, and the independence requirement already state. Prescribing delegation guaranteed role separation but duplicated harness-level and user-level instructions that already govern subagent use. Dropping the independence requirement along with that vocabulary was considered and rejected: it is a requirement about the evidence, not about topology, and self-review cannot substitute for it.
+A scoped gate avoids unrelated blockers but permits accepted decisions to drift indefinitely. A fixed execution workflow is predictable but adds ceremony and duplicates harness policy. The global gate intentionally accepts occasional blocking work in exchange for repository-wide architectural integrity.
 
 ## Consequences
 
-The skill set shrinks to clarification, architectural memory, and bounded delivery. Models gain freedom over execution shape and over which context performs a review, while the requirement that risky work be judged by a context that did not write it survives. Like every other rule here, it is an instruction rather than a mechanical gate; `adr check` can assert that the instruction is present, not that it was followed.
+Models choose efficient tactics. CI can execute the architecture gate deterministically, while workflow timing, contextual authority, and task scope remain honestly manual claims.
 
 ## Enforcement
 
-`adr check` asserts that the clarification stage declares both authority boundaries and the least-authority default, and that the execution stage declares the independent-review requirement and refuses to escalate a local change. Gate timing is enforced separately by `architecture.living-decisions`. Forward-test scenarios cover implicit local delivery, blocked remote delivery, read-only requests, and small changes with large architectural meaning.
+The package contract verifies that no dedicated planning or execution stage exists. Behavioral scenarios document authority, adaptive tactics, pre/post gate timing, and unrelated-drift handling without representing prose presence as behavioral proof.
 
 ## Revisit when
 
-Revisit if authority mistakes reappear despite the declared boundaries, if removing the delegation policy measurably degrades results on large changes, if independent review is routinely skipped or performed by the implementing context, or if a harness begins to require an explicit execution topology.
+Revisit if global gate failures routinely block work without improving architectural integrity or if a harness supplies stronger authority primitives.

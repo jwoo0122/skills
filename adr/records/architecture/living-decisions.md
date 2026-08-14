@@ -6,68 +6,95 @@ decision_type: knowledge-system
 applies_to:
   - adr/**
   - skills/maintain-architecture-decisions/**
-  - skills/clarify-and-plan/**
-  - skills/execute-to-pr/**
-summary: "Maintain ADRs as a semantic, revisable map of durable architectural intent."
+  - skills/architect/**
+summary: "Maintain ADRs as a semantic, revisable map whose accepted invariants have honest executable or manual enforcement."
 constrains: []
 depends_on:
   - interaction.material-ambiguity-loop
 supersedes: []
 superseded_by: []
-last_reviewed: "2026-07-26"
+last_reviewed: "2026-08-15"
+invariants:
+  - id: semantic-living-map
+    statement: "Stable questions own records that are revised rather than accumulated chronologically."
+  - id: indexed-consistency
+    statement: "The generated index matches all records and semantic relationships remain valid."
+  - id: complete-invariant-coverage
+    statement: "Every accepted invariant has exactly one executable or fully evidenced manual enforcement mapping."
+  - id: executable-registry
+    statement: "Executable enforcement references an argv-only central registry and each referenced check runs once without a shell."
+  - id: honest-manual-status
+    statement: "Manual invariants are structurally complete and reported as not mechanically verified."
+  - id: meaningful-conformance
+    statement: "General source substring assertions are not an ADR enforcement mechanism."
+  - id: portable-launcher
+    statement: "ADR tooling uses an existing compatible interpreter and never installs dependencies."
 enforcement:
-  - id: checker-implementation
-    path: skills/maintain-architecture-decisions/scripts/adr.py
-    must_contain:
-      - "def enforce_repository"
-      - "enforcement failed:"
-  - id: workflow-gate-documentation
-    path: skills/maintain-architecture-decisions/SKILL.md
-    must_contain:
-      - "scripts/adr check"
-  - id: implementation-gate
-    path: skills/execute-to-pr/SKILL.md
-    must_contain:
-      - "Run the ADR conformance gate before and after implementation."
+  - invariant: semantic-living-map
+    kind: manual
+    reason: "Whether two records own the same stable architectural question requires semantic judgment."
+    evidence:
+      - skills/maintain-architecture-decisions/references/decision-policy.md
+    revisit_when:
+      - "A reliable semantic duplicate detector becomes portable."
+  - invariant: indexed-consistency
+    kind: executable
+    check: adr-tool-contract
+  - invariant: complete-invariant-coverage
+    kind: executable
+    check: adr-tool-contract
+  - invariant: executable-registry
+    kind: executable
+    check: adr-tool-contract
+  - invariant: honest-manual-status
+    kind: executable
+    check: adr-tool-contract
+  - invariant: meaningful-conformance
+    kind: executable
+    check: adr-tool-contract
+  - invariant: portable-launcher
+    kind: executable
+    check: adr-tool-contract
 ---
 
 # Semantic living architecture decisions
 
 ## Decision question
 
-How should durable architectural intent remain discoverable and consistent across models and future changes?
+How should durable architectural intent remain discoverable, revisable, and verifiably consistent?
 
 ## Current decision
 
-The repository MUST maintain `adr/` as a semantic, indexed, revisable decision system. A record MUST own a stable architectural question and MUST be improved or revised before a new record is created for that same question.
+The repository maintains `adr/` as a semantic living decision map. Each record owns a stable question. Accepted records declare stable invariant IDs, and each invariant is connected exactly once to either a centrally registered executable check or an explicit manual entry with reason, evidence, and revisit conditions.
+
+`adr check` validates the complete system and executes every referenced argv-based check once from the repository root without a shell. The exact `{python}` argv token resolves to the compatible interpreter selected by the launcher. It reports manual invariants as not mechanically verified. Source substring assertions are not a general conformance mechanism.
 
 ## Context and forces
 
-Code reveals implementation but often not why a boundary, authority, compatibility rule, or trade-off must persist. Chronological append-only ADR logs grow linearly and force future agents to reconstruct current intent from a sequence of stale documents.
+Code reveals implementation but often not why a boundary or trade-off must persist. Chronological logs accumulate stale answers. The prior string-presence mechanism also created false confidence: preserving a sentence did not prove the architecture was followed, and one weak assertion could make an entire ADR appear enforced.
 
 ## Invariants
 
-- IDs and paths describe stable questions rather than sequence numbers.
-- `index.yaml` is the low-resolution router map and matches all records.
-- Accepted decisions remain open to explicit correction, reversal, supersession, and retirement.
-- Supersession relationships are bidirectional.
-- One logical writer owns ADR changes; any other context reports candidates and conflicts instead of editing.
-- Deterministic tooling validates structure and declared source-conformance assertions, not architectural importance or unconstrained prose.
-- Every accepted record MUST declare at least one repository-relative enforcement check or an explicit, evidenced enforcement exception; the gate MUST run before and after an authorized implementation.
-- ADR operations use a repository-provided, side-effect-free launcher that selects an interpreter capable of importing its required dependencies without installing packages.
+- `semantic-living-map`: Stable questions own records that are revised rather than accumulated chronologically.
+- `indexed-consistency`: The generated index matches all records and semantic relationships remain valid.
+- `complete-invariant-coverage`: Every accepted invariant has exactly one executable or fully evidenced manual enforcement mapping.
+- `executable-registry`: Executable enforcement references an argv-only central registry and each referenced check runs once without a shell.
+- `honest-manual-status`: Manual invariants are structurally complete and reported as not mechanically verified.
+- `meaningful-conformance`: General source substring assertions are not an ADR enforcement mechanism.
+- `portable-launcher`: ADR tooling uses an existing compatible interpreter and never installs dependencies.
 
 ## Alternatives and trade-offs
 
-Chronological append-only ADRs preserve a visible narrative but accumulate stale decisions. Keeping intent only in code avoids documentation work but increases model-to-model interpretation variance.
+Embedding arbitrary shell commands in each ADR is flexible but unsafe, duplicated, and difficult to audit. Keeping substring assertions is cheap but measures implementation traces rather than contracts. Requiring automation for every invariant would misrepresent context-sensitive model behavior; explicit manual status is more honest.
 
 ## Consequences
 
-Agents can load a small relevant decision subset and avoid re-asking settled intent. Maintaining semantic relationships requires deliberate revisions when questions split or merge.
+CI can run one global architecture command that invokes meaningful repository-owned checks. Adding accepted invariants requires explicit coverage. Manual claims remain visible debt rather than silently passing as machine proof.
 
 ## Enforcement
 
-The ADR launcher reports the selected Python interpreter and PyYAML location, then runs the structural and source-conformance tool with that same interpreter. It never installs dependencies. The tool validates semantic IDs, paths, statuses, relationships, required sections, index freshness, enforcement declarations, and idempotent indexing. `adr check` reads every accepted record's declared targets and fails on an explicit source mismatch or undocumented enforcement exception. Change review compares the diff with relevant accepted records and the gate result.
+The ADR tool contract exercises schema rejection, complete coverage, registry validation, command execution, deduplication, failure attribution, and manual reporting. The package contract exercises the repository's selected architectural surface. The launcher tests verify interpreter selection without installation.
 
 ## Revisit when
 
-Revisit if repository scale makes the YAML index insufficient, if automated selection needs richer metadata, or if the semantic-update policy causes decision loss in practice.
+Revisit if command isolation needs a stronger trust model, check runtime requires selection or caching beyond one invocation, or manual invariants can be evaluated deterministically.

@@ -1,16 +1,19 @@
 #!/bin/sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-PYTHON=$(
-    CDPATH= cd -- "$ROOT" && \
-        "$ROOT/skills/maintain-architecture-decisions/scripts/adr" --print-python
-)
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$root"
+python=$(skills/maintain-architecture-decisions/scripts/adr --print-python --root .)
 
-"$ROOT/skills/maintain-architecture-decisions/scripts/adr" validate --root "$ROOT"
-"$ROOT/skills/maintain-architecture-decisions/scripts/adr" check --root "$ROOT"
+skills/maintain-architecture-decisions/scripts/adr check --root .
+PYTHONDONTWRITEBYTECODE=1 "$python" -m unittest discover -s tests -p 'test_*.py'
 
-PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$ROOT/tests/test_package.py"
-PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$ROOT/tests/test_adr.py"
+before=$(sha256sum adr/index.yaml | cut -d' ' -f1)
+skills/maintain-architecture-decisions/scripts/adr reindex --root .
+after=$(sha256sum adr/index.yaml | cut -d' ' -f1)
+[ "$before" = "$after" ] || {
+  echo "reindex is not idempotent" >&2
+  exit 1
+}
 
-printf '%s\n' 'all checks: ok'
+echo "all checks: ok"

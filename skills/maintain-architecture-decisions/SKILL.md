@@ -1,74 +1,47 @@
 ---
 name: maintain-architecture-decisions
-description: Internal architecture-decision maintenance for the chained coding workflow. Use when a durable architectural intent is confirmed, an existing decision needs correction or reversal, or code and accepted decisions conflict. Maintain a semantic living ADR system without chronological document accumulation. Do not present this as a direct user entry point.
-user-invocable: false
+description: Internal ADR oversight for architect. Maintain a semantic living map of durable architectural intent, connect every accepted invariant to executable or explicit manual enforcement, and run the global conformance gate. Do not present this as a user-facing entry point.
 ---
 
-# Maintain Architecture Decisions
+# Maintain architecture decisions
 
-Preserve architectural intent that future agents cannot reliably recover from code alone.
+Operate only as the internal ADR authority for `architect`. Keep durable intent discoverable, revisable, and honestly verified.
 
-## Read before deciding
+## Model
 
-If `adr/index.yaml` exists, read it before architecture-sensitive clarification, implementation, or review. Load only records relevant to the affected paths, scopes, and decision relationships.
+- `adr/index.yaml` is the low-resolution router map.
+- `adr/records/<scope>/<question>.md` owns one stable design question.
+- Improve or revise the owning record instead of appending chronology.
+- Create a record only when a decision is durable, constraining, and non-obvious.
+- Accepted decisions may be corrected, superseded, or retired; keep relationships bidirectional.
+- One logical writer edits `adr/`. Other contexts report evidence and conflicts.
 
-Treat an accepted ADR as current intent, not immutable truth. A newer explicit user decision may revise, supersede, or retire it. Never silently implement through a conflict.
+## Reconciliation
 
-Read [the decision policy](references/decision-policy.md) before creating or structurally changing a record.
+Classify the durable effect as `none`, `reference`, `improve`, `revise`, `create`, `supersede`, or `retire`. Never rewrite an accepted decision solely because code drifted. A current explicit user decision can change an ADR; accidental implementation state cannot.
 
-## Classify the effect
+Read `references/decision-policy.md` before changing records. Use the repository's template and semantic IDs. Update `last_reviewed` when meaning or enforcement changes, then reindex.
 
-Use the lightest applicable action:
+## Invariants and enforcement
 
-- `none`: no durable architectural intent is involved.
-- `reference`: follow an existing decision without editing it.
-- `improve`: clarify metadata, scope, invariants, enforcement, or relationships without changing the decision.
-- `revise`: change the answer to the same stable decision question in the existing record.
-- `create`: add a record only for a genuinely new stable decision question.
-- `supersede`: split, merge, or replace decision questions and link both directions.
-- `retire`: mark a decision whose context no longer exists.
-- `clarify`: stop when the durable intent cannot be established from the repository, evidence, or user.
+Every accepted record declares stable invariant IDs in frontmatter. Every invariant has exactly one enforcement entry:
 
-Do not create an ADR for local implementation details, routine bug fixes, test names, private helpers, or behavior already obvious from code and public contracts.
+- `executable`: references a check registered in `adr/.adr-system.yaml`; `adr check` executes its argv without a shell from the repository root.
+- `manual`: includes a concrete reason, evidence, and revisit conditions. It is accepted by CI but reported as not mechanically verified.
 
-## Keep one logical writer
+Do not use source substring presence as a general proxy for conformance. Put meaningful contract checks in repository-owned tests, linters, schema validators, graph checks, simulations, or other deterministic commands. A test that only searches prose for an instruction remains weak evidence and must not be represented as semantic enforcement.
 
-One role owns ADR writes for a task. Any other context, including a delegated implementer, returns relevant IDs, conflicts, and proposed actions instead of editing `adr/` concurrently.
+Never downgrade executable enforcement to manual, weaken a check, or add an exception merely to pass the gate. If intent, scope, and source disagree, return the conflict to `architect`.
 
-## Maintain the living structure
+## Commands
 
-Initialize `adr/` when the first durable architectural decision is confirmed:
-
-```sh
-<skill-root>/scripts/adr init --root <repository-root>
-```
-
-Initialization marks ownership and schema version. Refuse to adopt a non-empty `adr/` without a compatible marker; never follow symlinks outside the repository.
-
-Store records as `adr/records/<scope>/<question>.md`. Use semantic IDs such as `identity.session-authority`; never use chronological numbers. Update the existing record when the stable question is unchanged.
-
-After editing records, rebuild and validate the index:
+Use the side-effect-free launcher. It selects an existing Python with PyYAML and never installs dependencies.
 
 ```sh
-<skill-root>/scripts/adr reindex --root <repository-root>
-<skill-root>/scripts/adr validate --root <repository-root>
-<skill-root>/scripts/adr check --root <repository-root>
+skills/maintain-architecture-decisions/scripts/adr init --root .
+skills/maintain-architecture-decisions/scripts/adr reindex --root .
+skills/maintain-architecture-decisions/scripts/adr validate --root .
+skills/maintain-architecture-decisions/scripts/adr check --root .
 ```
 
-`validate` checks the ADR structure and index. `check` is the source-conformance gate: every accepted ADR MUST either declare at least one deterministic `enforcement` check or provide an `enforcement_exception` with a status, reason, evidence, and revisit conditions. For checks, the command reads repository-relative target files and enforces exact `must_contain` and `must_not_contain` assertions. Run it once against the pre-change baseline and again after implementation. A failing check blocks delivery; it is evidence of either an implementation violation, stale ADR intent, or an undocumented exception that must be reconciled. These checks are intentionally explicit and mechanical; they do not claim to prove the meaning of unconstrained natural-language prose.
-
-The launcher checks candidate Python interpreters by importing PyYAML, then runs the structural and enforcement tool with the selected interpreter. It never installs packages. Set `ADR_PYTHON` to override discovery. The tool validates syntax, duplicate keys, IDs, status, paths, relationships, complete sections, enforcement declarations, and index freshness. Reindexing replaces the index atomically and can recover a missing index in a marked ADR system. It does not decide whether an intent is architecturally important or prove unconstrained natural-language semantics.
-
-## Hand off
-
-Before implementation, hand back:
-
-```text
-adr_action:
-relevant_ids:
-changed_ids:
-conflicts:
-implementation_invariants:
-```
-
-Return to clarification if a conflict remains. Otherwise carry only the relevant records and invariants into implementation.
+`check` includes validation, verifies complete invariant coverage, executes each referenced registry check once, and fails globally on any error. Run it before and after every repository change when the ADR system exists. CI may use the same command as its architecture gate.
